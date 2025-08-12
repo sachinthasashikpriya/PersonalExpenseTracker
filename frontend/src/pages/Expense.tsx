@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import {
   Bar,
   BarChart,
@@ -64,7 +66,7 @@ const ExpenseComponent = () => {
   const [activeTab, setActiveTab] = useState("Dashboard");
   const [startDate, setStartDate] = useState("2024.02.10");
   const [endDate, setEndDate] = useState("2024.02.10");
-  const [activeFilter, setActiveFilter] = useState("Monthly");
+  const [activeFilter, setActiveFilter] = useState("Today");
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
   const [newExpense, setNewExpense] = useState({
     category: "",
@@ -80,17 +82,45 @@ const ExpenseComponent = () => {
     "Reminders",
     "Profile",
   ];
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   // Fetch expenses on component mount
   useEffect(() => {
     fetchExpenses();
-  }, []);
+  }, [activeFilter, selectedDate]);
 
   const fetchExpenses = async () => {
     try {
       setLoading(true);
-      const data = await expenseService.getAllExpenses();
-      // Make sure data is an array before setting state
+
+      let data;
+
+      // Get today's date and yesterday's date with time set to midnight
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+
+      if (activeFilter === "Today") {
+        console.log("Fetching Today's expenses");
+        data = await expenseService.getExpensesByDate(today);
+        console.log("Received data:", data);
+      } else if (activeFilter === "Yesterday") {
+        // Fetch only yesterday's expenses
+        data = await expenseService.getExpensesByDate(yesterday);
+      } else if (activeFilter === "Calendar" && selectedDate) {
+        // Fetch expenses for selected calendar date
+        const calendarDate = new Date(selectedDate);
+        calendarDate.setHours(0, 0, 0, 0);
+        data = await expenseService.getExpensesByDate(calendarDate);
+      } else {
+        // Default: fetch all expenses (limited to recent ones)
+        data = await expenseService.getAllExpenses();
+      }
+
       setExpenses(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
@@ -105,14 +135,43 @@ const ExpenseComponent = () => {
   const handleAddExpense = async () => {
     if (newExpense.category && newExpense.description && newExpense.amount) {
       try {
-        const expenseData = {
+        const expenseData: {
+          category: string;
+          description: string;
+          amount: number;
+          date?: string;
+        } = {
           category: newExpense.category,
           description: newExpense.description,
           amount: parseFloat(newExpense.amount),
         };
 
+        // Set date based on the active filter
+        if (activeFilter === "Yesterday") {
+          // Use yesterday's date when in Yesterday filter
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          const year = yesterday.getFullYear();
+          const month = String(yesterday.getMonth() + 1).padStart(2, "0");
+          const day = String(yesterday.getDate()).padStart(2, "0");
+          expenseData.date = `${year}-${month}-${day}T12:00:00.000Z`;
+        } else if (activeFilter === "Calendar" && selectedDate) {
+          // Use calendar selected date
+          const year = selectedDate.getFullYear();
+          const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
+          const day = String(selectedDate.getDate()).padStart(2, "0");
+          expenseData.date = `${year}-${month}-${day}T12:00:00.000Z`;
+        } else {
+          // Default to today
+          const today = new Date();
+          const year = today.getFullYear();
+          const month = String(today.getMonth() + 1).padStart(2, "0");
+          const day = String(today.getDate()).padStart(2, "0");
+          expenseData.date = `${year}-${month}-${day}T12:00:00.000Z`;
+        }
+
         const savedExpense = await expenseService.createExpense(expenseData);
-        setExpenses([savedExpense, ...expenses]); // Add to beginning of array
+        setExpenses([savedExpense, ...expenses]);
         setNewExpense({ category: "", description: "", amount: "" });
         setShowAddExpenseModal(false);
         setError(null);
@@ -143,6 +202,30 @@ const ExpenseComponent = () => {
       day: "numeric",
     });
   };
+
+  // const getFilteredExpenses = () => {
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0); // Set to beginning of today
+
+  //   const yesterday = new Date(today);
+  //   yesterday.setDate(yesterday.getDate() - 1); // Set to beginning of yesterday
+
+  //   return expenses.filter((expense) => {
+  //     const expenseDate = new Date(expense.createdAt || "");
+  //     expenseDate.setHours(0, 0, 0, 0); // Remove time part for comparison
+
+  //     if (activeFilter === "Today") {
+  //       return expenseDate.getTime() === today.getTime();
+  //     } else if (activeFilter === "Yesterday") {
+  //       return expenseDate.getTime() === yesterday.getTime();
+  //     } else if (activeFilter === "Calendar" && selectedDate) {
+  //       // Filter by selected calendar date
+  //       selectedDate.setHours(0, 0, 0, 0);
+  //       return expenseDate.getTime() === selectedDate.getTime();
+  //     }
+  //     return activeFilter === "Calendar" && !selectedDate; // Show all if Calendar but no date selected
+  //   });
+  // };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
@@ -260,7 +343,16 @@ const ExpenseComponent = () => {
                 {["Today", "Yesterday", "Calendar"].map((filter) => (
                   <button
                     key={filter}
-                    onClick={() => setActiveFilter(filter)}
+                    onClick={() => {
+                      setActiveFilter(filter);
+                      if (filter === "Calendar") {
+                        setShowCalendar(true);
+                        if (!selectedDate) setSelectedDate(new Date());
+                      } else {
+                        setShowCalendar(false);
+                        setSelectedDate(null);
+                      }
+                    }}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                       activeFilter === filter
                         ? "bg-teal-500 text-white"
@@ -277,37 +369,43 @@ const ExpenseComponent = () => {
               <div className="text-center py-8">Loading expenses...</div>
             ) : (
               <div className="space-y-6">
-                {expenses.map((expense) => (
-                  <div
-                    key={expense._id}
-                    className="border-b border-gray-200 pb-4"
-                  >
-                    <div className="flex justify-between items-start mb-2">
-                      <span className="text-sm text-gray-600">
-                        {formatDate(expense.createdAt || "")}
-                      </span>
-                      <button
-                        onClick={() => handleDeleteExpense(expense._id!)}
-                        className="text-red-500 hover:text-red-700 text-sm"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <div className="font-medium text-gray-800">
-                          {expense.category}
+                {expenses.length > 0 ? (
+                  expenses.map((expense) => (
+                    <div
+                      key={expense._id}
+                      className="border-b border-gray-200 pb-4"
+                    >
+                      <div className="flex justify-between items-start mb-2">
+                        <span className="text-sm text-gray-600">
+                          {formatDate(expense.date || "")}
+                        </span>
+                        <button
+                          onClick={() => handleDeleteExpense(expense._id!)}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 text-sm">
+                        <div>
+                          <div className="font-medium text-gray-800">
+                            {expense.category}
+                          </div>
+                          <div className="text-gray-600">
+                            {expense.description}
+                          </div>
                         </div>
-                        <div className="text-gray-600">
-                          {expense.description}
+                        <div className="text-right font-medium text-gray-800">
+                          Rs.{expense.amount.toFixed(2)}
                         </div>
                       </div>
-                      <div className="text-right font-medium text-gray-800">
-                        Rs.{expense.amount.toFixed(2)}
-                      </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    No expenses found for {activeFilter.toLowerCase()}
                   </div>
-                ))}
+                )}
 
                 {/* Add New Expense Button */}
                 <div className="pt-4">
@@ -474,6 +572,25 @@ const ExpenseComponent = () => {
                 </button>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Show Calendar When Selected */}
+        {showCalendar && (
+          <div className="mb-6">
+            <div className="bg-white p-2 shadow-md inline-block rounded-md">
+              <DatePicker
+                selected={selectedDate}
+                onChange={(date) => setSelectedDate(date)}
+                inline
+                maxDate={new Date()}
+              />
+            </div>
+            {selectedDate && (
+              <div className="mt-2 text-sm text-gray-600">
+                Showing expenses for: {formatDate(selectedDate.toISOString())}
+              </div>
+            )}
           </div>
         )}
       </div>

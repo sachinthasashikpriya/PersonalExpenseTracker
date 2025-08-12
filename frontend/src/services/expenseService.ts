@@ -41,4 +41,24 @@ export const expenseService = {
       throw error;
     }
   },
+
+ 
+  getExpensesByDate: async (date: Date): Promise<Expense[]> => {
+    try {
+      // Format date as YYYY-MM-DD for consistent date handling
+   
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+ 
+      
+      console.log("Fetching expenses for date:", formattedDate); // Debugging
+      const response = await API.get(`/expense/date/${formattedDate}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching expenses by date:', error);
+      throw error;
+    }
+  },
 };
