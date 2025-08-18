@@ -61,4 +61,14 @@ export const expenseService = {
       throw error;
     }
   },
+  // Add this function to your expenseService.ts
+getExpensesByDateRange: async (startDate: string, endDate: string): Promise<Expense[]> => {
+  try {
+    const response = await API.get(`/expense/range/${startDate}/${endDate}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching expenses by date range:', error);
+    throw error;
+  }
+},
 };

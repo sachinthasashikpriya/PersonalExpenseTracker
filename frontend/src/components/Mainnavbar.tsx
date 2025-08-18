@@ -1,4 +1,5 @@
-import React from 'react';
+import React from "react";
+import { useNavigate } from "react-router-dom";
 
 interface MainnavbarProps {
   activeTab: string;
@@ -6,14 +7,21 @@ interface MainnavbarProps {
 }
 
 const Mainnavbar: React.FC<MainnavbarProps> = ({ activeTab, setActiveTab }) => {
+  const navigate = useNavigate();
+
   const menuItems = [
-    "Dashboard",
-    "Expenses",
-    "Incomes",
-    "Create Budget",
-    "Reminders",
-    "Profile",
+    { name: "Dashboard", path: "/" },
+    { name: "Expenses", path: "/expense" },
+    { name: "Incomes", path: "/income" },
+    { name: "Create Budget", path: "/create-budget" },
+    { name: "Reminders", path: "/reminder" },
+    { name: "Profile", path: "/profile" },
   ];
+
+  const handleNavigation = (itemName: string, path: string) => {
+    setActiveTab(itemName); // still highlight the active one
+    navigate(path); // navigate to route
+  };
 
   return (
     <div className="w-64 bg-white shadow-lg">
@@ -33,15 +41,15 @@ const Mainnavbar: React.FC<MainnavbarProps> = ({ activeTab, setActiveTab }) => {
       <nav className="p-4 space-y-3">
         {menuItems.map((item) => (
           <button
-            key={item}
-            onClick={() => setActiveTab(item)}
+            key={item.name}
+            onClick={() => handleNavigation(item.name, item.path)}
             className={`w-full text-left px-4 py-3 rounded-lg font-medium transition-colors ${
-              activeTab === item
+              activeTab === item.name
                 ? "bg-teal-500 text-white shadow-md"
                 : "text-gray-600 hover:bg-gray-100"
             }`}
           >
-            {item}
+            {item.name}
           </button>
         ))}
       </nav>

@@ -68,3 +68,28 @@ export const deleteExpense = async (req: Request, res: Response) => {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
   }
 };
+
+  export const getExpensesByDateRange = async (req: Request, res: Response) => {
+    try {
+      const { startDate, endDate } = req.params;
+      
+      // Create date range 
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      
+      const expenses = await Expense.find({
+        date: {
+          $gte: start,
+          $lte: end
+        }
+      }).sort({ date: 1 });
+      
+      res.status(200).json(expenses);
+    } catch (error) {
+      res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
+    }
+  };
+

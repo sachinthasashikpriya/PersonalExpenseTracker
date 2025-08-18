@@ -3,7 +3,8 @@ import {
     createExpense,
     deleteExpense,
     getAllExpenses,
-    getExpensesByDate
+    getExpensesByDate,
+    getExpensesByDateRange
 } from '../controllers/expenseController';
   
 
@@ -13,5 +14,6 @@ router.get('/', getAllExpenses);
 router.post('/', createExpense);
 router.delete('/:id', deleteExpense);
 router.get('/date/:date', getExpensesByDate);
+router.get('/range/:startDate/:endDate', getExpensesByDateRange);
 
 export default router;
