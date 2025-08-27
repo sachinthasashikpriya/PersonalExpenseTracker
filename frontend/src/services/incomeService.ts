@@ -1,0 +1,74 @@
+import API from './api';
+
+export interface Income {
+  _id?: string;
+  category: string;
+  description: string;
+  amount: number;
+  date?: string;
+  createdAt?: string;
+}
+
+export const incomeService = {
+  // Get all incomes
+  getAllIncomes: async (): Promise<Income[]> => {
+    try {
+      const response = await API.get('/expense');
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      throw error;
+    }
+  },
+
+  // Create new expense
+  createExpense: async (expense: Omit<Income, '_id' | 'createdAt'>): Promise<Income> => {
+    try {
+      const response = await API.post('/expense', expense);
+      return response.data;
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      throw error;
+    }
+  },
+
+  // Delete expense
+  deleteExpense: async (id: string): Promise<void> => {
+    try {
+      await API.delete(`/expense/${id}`);
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      throw error;
+    }
+  },
+
+ 
+  getExpensesByDate: async (date: Date): Promise<Expense[]> => {
+    try {
+      // Format date as YYYY-MM-DD for consistent date handling
+   
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const formattedDate = `${year}-${month}-${day}`;
+ 
+      
+      console.log("Fetching expenses for date:", formattedDate); // Debugging
+      const response = await API.get(`/expense/date/${formattedDate}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching expenses by date:', error);
+      throw error;
+    }
+  },
+  // Add this function to your expenseService.ts
+getExpensesByDateRange: async (startDate: string, endDate: string): Promise<Expense[]> => {
+  try {
+    const response = await API.get(`/expense/range/${startDate}/${endDate}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching expenses by date range:', error);
+    throw error;
+  }
+},
+};

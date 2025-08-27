@@ -3,7 +3,7 @@ import AddExpenseModal from "../components/AddExpenseModal";
 import ExpenseTable from "../components/Expensetable";
 import Mainnavbar from "../components/Mainnavbar";
 import CategoriesPieChart from "../components/PieChart";
-import StaticChart from "../components/Staticchart";
+import StaticChart from "../components/StaticChart";
 import { expenseService, type Expense } from "../services/expenseService";
 
 const ExpenseComponent = () => {
@@ -13,7 +13,7 @@ const ExpenseComponent = () => {
   const [error, setError] = useState<string | null>(null);
 
   // UI state variables
-  const [activeTab, setActiveTab] = useState("Dashboard");
+  const [activeTab, setActiveTab] = useState("Expenses");
   const [startDate, setStartDate] = useState("2024.02.10");
   const [endDate, setEndDate] = useState("2024.02.10");
   const [activeFilter, setActiveFilter] = useState("Today");

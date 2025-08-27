@@ -13,6 +13,7 @@ app.use(express.json());
 
 // Routes
 app.use('/api/expense', expenseRoutes);
+app.use('/api/income', expenseRoutes);
 //app.use('/api/auth', authRoutes);
 //app.use('/api/transactions', transactionRoutes);
 
