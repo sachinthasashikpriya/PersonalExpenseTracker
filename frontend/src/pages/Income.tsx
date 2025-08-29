@@ -1,14 +1,14 @@
 import { useEffect, useState } from "react";
-import AddExpenseModal from "../components/AddExpenseModal";
-import ExpenseTable from "../components/Expensetable";
+import AddIncomeModal from "../components/AddIncomeModal";
+import IncomeTable from "../components/Incometable";
 import Mainnavbar from "../components/Mainnavbar";
-import CategoriesPieChart from "../components/PieChart";
-import StaticChart from "../components/StaticChart";
-import { expenseService, type Expense } from "../services/expenseService";
+import CategoriesPieChartIncome from "../components/PieChartIncome";
+import StaticChartIncome from "../components/StaticChartIncome";
+import { incomeService, type Income } from "../services/incomeService";
 
-const ExpenseComponent = () => {
+const IncomeComponent = () => {
   // Main state variables
-  const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [incomes, setIncomes] = useState<Income[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -17,8 +17,8 @@ const ExpenseComponent = () => {
   const [startDate, setStartDate] = useState("2024.02.10");
   const [endDate, setEndDate] = useState("2024.02.10");
   const [activeFilter, setActiveFilter] = useState("Today");
-  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
-  const [newExpense, setNewExpense] = useState({
+  const [showAddIncomeModal, setShowAddIncomeModal] = useState(false);
+  const [newIncome, setNewIncome] = useState({
     category: "",
     description: "",
     amount: "",
@@ -29,10 +29,10 @@ const ExpenseComponent = () => {
 
   // Fetch expenses on component mount
   useEffect(() => {
-    fetchExpenses();
+    fetchIncomes();
   }, [activeFilter, selectedDate]);
 
-  const fetchExpenses = async () => {
+  const fetchIncomes = async () => {
     try {
       setLoading(true);
 
@@ -47,45 +47,45 @@ const ExpenseComponent = () => {
       yesterday.setHours(0, 0, 0, 0);
 
       if (activeFilter === "Today") {
-        console.log("Fetching Today's expenses");
-        data = await expenseService.getExpensesByDate(today);
+        console.log("Fetching Today's incomes");
+        data = await incomeService.getIncomesByDate(today);
         console.log("Received data:", data);
       } else if (activeFilter === "Yesterday") {
         // Fetch only yesterday's expenses
-        data = await expenseService.getExpensesByDate(yesterday);
+        data = await incomeService.getIncomesByDate(yesterday);
       } else if (activeFilter === "Calendar" && selectedDate) {
         // Fetch expenses for selected calendar date
         const calendarDate = new Date(selectedDate);
         calendarDate.setHours(0, 0, 0, 0);
-        data = await expenseService.getExpensesByDate(calendarDate);
+        data = await incomeService.getIncomesByDate(calendarDate);
       } else {
         // Default: fetch all expenses (limited to recent ones)
-        data = await expenseService.getAllExpenses();
+        data = await incomeService.getAllIncomes();
       }
 
-      setExpenses(Array.isArray(data) ? data : []);
+      setIncomes(Array.isArray(data) ? data : []);
       setError(null);
     } catch (err) {
-      setError("Failed to load expenses");
-      console.error("Error fetching expenses:", err);
-      setExpenses([]); // Set empty array on error
+      setError("Failed to load incomes");
+      console.error("Error fetching incomes:", err);
+      setIncomes([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddExpense = async () => {
-    if (newExpense.category && newExpense.description && newExpense.amount) {
+  const handleAddIncome = async () => {
+    if (newIncome.category && newIncome.description && newIncome.amount) {
       try {
-        const expenseData: {
+        const incomeData: {
           category: string;
           description: string;
           amount: number;
           date?: string;
         } = {
-          category: newExpense.category,
-          description: newExpense.description,
-          amount: parseFloat(newExpense.amount),
+          category: newIncome.category,
+          description: newIncome.description,
+          amount: parseFloat(newIncome.amount),
         };
 
         // Set date based on the active filter
@@ -96,42 +96,42 @@ const ExpenseComponent = () => {
           const year = yesterday.getFullYear();
           const month = String(yesterday.getMonth() + 1).padStart(2, "0");
           const day = String(yesterday.getDate()).padStart(2, "0");
-          expenseData.date = `${year}-${month}-${day}T12:00:00.000Z`;
+          incomeData.date = `${year}-${month}-${day}T12:00:00.000Z`;
         } else if (activeFilter === "Calendar" && selectedDate) {
           // Use calendar selected date
           const year = selectedDate.getFullYear();
           const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
           const day = String(selectedDate.getDate()).padStart(2, "0");
-          expenseData.date = `${year}-${month}-${day}T12:00:00.000Z`;
+          incomeData.date = `${year}-${month}-${day}T12:00:00.000Z`;
         } else {
           // Default to today
           const today = new Date();
           const year = today.getFullYear();
           const month = String(today.getMonth() + 1).padStart(2, "0");
           const day = String(today.getDate()).padStart(2, "0");
-          expenseData.date = `${year}-${month}-${day}T12:00:00.000Z`;
+          incomeData.date = `${year}-${month}-${day}T12:00:00.000Z`;
         }
 
-        const savedExpense = await expenseService.createExpense(expenseData);
-        setExpenses([savedExpense, ...expenses]);
-        setNewExpense({ category: "", description: "", amount: "" });
-        setShowAddExpenseModal(false);
+        const savedIncome = await incomeService.createIncome(incomeData);
+        setIncomes([savedIncome, ...incomes]);
+        setNewIncome({ category: "", description: "", amount: "" });
+        setShowAddIncomeModal(false);
         setError(null);
       } catch (err) {
-        setError("Failed to add expense");
-        console.error("Error adding expense:", err);
+        setError("Failed to add Income");
+        console.error("Error adding Income:", err);
       }
     }
   };
 
-  const handleDeleteExpense = async (id: string) => {
+  const handleDeleteIncome = async (id: string) => {
     try {
-      await expenseService.deleteExpense(id);
-      setExpenses(expenses.filter((expense) => expense._id !== id));
+      await incomeService.deleteIncome(id);
+      setIncomes(incomes.filter((income) => income._id !== id));
       setError(null);
     } catch (err) {
-      setError("Failed to delete expense");
-      console.error("Error deleting expense:", err);
+      setError("Failed to delete Income");
+      console.error("Error deleting Income:", err);
     }
   };
 
@@ -152,7 +152,7 @@ const ExpenseComponent = () => {
         )}
 
         {/* Date Range and Chart */}
-        <StaticChart
+        <StaticChartIncome
           startDate={startDate}
           endDate={endDate}
           setStartDate={setStartDate}
@@ -160,9 +160,9 @@ const ExpenseComponent = () => {
         />
 
         <div className="grid grid-cols-3 gap-8">
-          {/* Expense Table */}
-          <ExpenseTable
-            expenses={expenses}
+          {/* Income Table */}
+          <IncomeTable
+            incomes={incomes}
             loading={loading}
             activeFilter={activeFilter}
             setActiveFilter={setActiveFilter}
@@ -170,28 +170,28 @@ const ExpenseComponent = () => {
             setSelectedDate={setSelectedDate}
             showCalendar={showCalendar}
             setShowCalendar={setShowCalendar}
-            handleDeleteExpense={handleDeleteExpense}
-            setShowAddExpenseModal={setShowAddExpenseModal}
+            handleDeleteIncome={handleDeleteIncome}
+            setShowAddIncomeModal={setShowAddIncomeModal}
           />
 
           {/* Categories Pie Chart */}
-          <CategoriesPieChart
+          <CategoriesPieChartIncome
             activeFilter={activeFilter}
             setActiveFilter={setActiveFilter}
           />
         </div>
 
         {/* Add Expense Modal */}
-        <AddExpenseModal
-          showAddExpenseModal={showAddExpenseModal}
-          setShowAddExpenseModal={setShowAddExpenseModal}
-          newExpense={newExpense}
-          setNewExpense={setNewExpense}
-          handleAddExpense={handleAddExpense}
+        <AddIncomeModal
+          showAddIncomeModal={showAddIncomeModal}
+          setShowAddIncomeModal={setShowAddIncomeModal}
+          newIncome={newIncome}
+          setNewIncome={setNewIncome}
+          handleAddIncome={handleAddIncome}
         />
       </div>
     </div>
   );
 };
 
-export default ExpenseComponent;
+export default IncomeComponent;

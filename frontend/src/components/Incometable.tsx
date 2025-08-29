@@ -1,10 +1,10 @@
-import React from 'react';
+import React from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import type { income } from "../services/incomeService";
+import type { Income } from "../services/incomeService";
 
 interface incomeTableProps {
-  incomes: income[];
+  incomes: Income[];
   loading: boolean;
   activeFilter: string;
   setActiveFilter: (filter: string) => void;
@@ -12,8 +12,8 @@ interface incomeTableProps {
   setSelectedDate: (date: Date | null) => void;
   showCalendar: boolean;
   setShowCalendar: (show: boolean) => void;
-  handleDeleteincome: (id: string) => void;
-  setShowAddincomeModal: (show: boolean) => void;
+  handleDeleteIncome: (id: string) => void;
+  setShowAddIncomeModal: (show: boolean) => void;
 }
 
 const incomeTable: React.FC<incomeTableProps> = ({
@@ -25,8 +25,8 @@ const incomeTable: React.FC<incomeTableProps> = ({
   setSelectedDate,
   showCalendar,
   setShowCalendar,
-  handleDeleteincome,
-  setShowAddincomeModal,
+  handleDeleteIncome,
+  setShowAddIncomeModal,
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -92,16 +92,13 @@ const incomeTable: React.FC<incomeTableProps> = ({
         <div className="space-y-6">
           {incomes.length > 0 ? (
             incomes.map((income) => (
-              <div
-                key={income._id}
-                className="border-b border-gray-200 pb-4"
-              >
+              <div key={income._id} className="border-b border-gray-200 pb-4">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm text-gray-600">
                     {formatDate(income.date || "")}
                   </span>
                   <button
-                    onClick={() => handleDeleteincome(income._id!)}
+                    onClick={() => handleDeleteIncome(income._id!)}
                     className="text-red-500 hover:text-red-700 text-sm"
                   >
                     Delete
@@ -112,9 +109,7 @@ const incomeTable: React.FC<incomeTableProps> = ({
                     <div className="font-medium text-gray-800">
                       {income.category}
                     </div>
-                    <div className="text-gray-600">
-                      {income.description}
-                    </div>
+                    <div className="text-gray-600">{income.description}</div>
                   </div>
                   <div className="text-right font-medium text-gray-800">
                     Rs.{income.amount.toFixed(2)}
@@ -131,7 +126,7 @@ const incomeTable: React.FC<incomeTableProps> = ({
           {/* Add New income Button */}
           <div className="pt-4">
             <button
-              onClick={() => setShowAddincomeModal(true)}
+              onClick={() => setShowAddIncomeModal(true)}
               className="w-full border-2 border-dashed border-gray-300 rounded-lg py-4 text-gray-500 hover:border-teal-500 hover:text-teal-500 transition-colors flex items-center justify-center space-x-2"
             >
               <span className="text-xl">+</span>

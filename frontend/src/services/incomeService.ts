@@ -13,37 +13,37 @@ export const incomeService = {
   // Get all incomes
   getAllIncomes: async (): Promise<Income[]> => {
     try {
-      const response = await API.get('/expense');
+      const response = await API.get('/income');
       return response.data;
     } catch (error) {
-      console.error('Error fetching expenses:', error);
+      console.error('Error fetching incomes:', error);
       throw error;
     }
   },
 
-  // Create new expense
-  createExpense: async (expense: Omit<Income, '_id' | 'createdAt'>): Promise<Income> => {
+  // Create new income
+  createIncome: async (income: Omit<Income, '_id' | 'createdAt'>): Promise<Income> => {
     try {
-      const response = await API.post('/expense', expense);
+      const response = await API.post('/income', income);
       return response.data;
     } catch (error) {
-      console.error('Error creating expense:', error);
+      console.error('Error creating income:', error);
       throw error;
     }
   },
 
   // Delete expense
-  deleteExpense: async (id: string): Promise<void> => {
+  deleteIncome: async (id: string): Promise<void> => {
     try {
-      await API.delete(`/expense/${id}`);
+      await API.delete(`/income/${id}`);
     } catch (error) {
-      console.error('Error deleting expense:', error);
+      console.error('Error deleting income:', error);
       throw error;
     }
   },
 
  
-  getExpensesByDate: async (date: Date): Promise<Expense[]> => {
+  getIncomesByDate: async (date: Date): Promise<Income[]> => {
     try {
       // Format date as YYYY-MM-DD for consistent date handling
    
@@ -53,21 +53,21 @@ export const incomeService = {
       const formattedDate = `${year}-${month}-${day}`;
  
       
-      console.log("Fetching expenses for date:", formattedDate); // Debugging
-      const response = await API.get(`/expense/date/${formattedDate}`);
+      console.log("Fetching incomes for date:", formattedDate); // Debugging
+      const response = await API.get(`/income/date/${formattedDate}`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching expenses by date:', error);
+      console.error('Error fetching incomes by date:', error);
       throw error;
     }
   },
   // Add this function to your expenseService.ts
-getExpensesByDateRange: async (startDate: string, endDate: string): Promise<Expense[]> => {
+getIncomesByDateRange: async (startDate: string, endDate: string): Promise<Income[]> => {
   try {
-    const response = await API.get(`/expense/range/${startDate}/${endDate}`);
+    const response = await API.get(`/income/range/${startDate}/${endDate}`);
     return response.data;
   } catch (error) {
-    console.error('Error fetching expenses by date range:', error);
+    console.error('Error fetching incomes by date range:', error);
     throw error;
   }
 },

@@ -28,4 +28,4 @@ const incomeSchema = new mongoose.Schema({
   timestamps: true
 });
 
-export default mongoose.model('Expense', incomeSchema);
+export default mongoose.model('Income', incomeSchema);
