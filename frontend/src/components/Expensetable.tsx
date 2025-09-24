@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import type { Expense } from "../services/expenseService";
@@ -12,8 +12,8 @@ interface ExpenseTableProps {
   setSelectedDate: (date: Date | null) => void;
   showCalendar: boolean;
   setShowCalendar: (show: boolean) => void;
-  handleDeleteExpense: (id: string) => void;
-  setShowAddExpenseModal: (show: boolean) => void;
+  handleDeleteExpense?: (id: string) => void;
+  setShowAddExpenseModal?: (show: boolean) => void;
 }
 
 const ExpenseTable: React.FC<ExpenseTableProps> = ({
@@ -42,7 +42,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
     <div className="col-span-2 bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
         <div className="space-x-2">
-          {["Today", "Yesterday", "Calendar"].map((filter) => (
+          {["Today", "Yesterday", "Week", "Calendar"].map((filter) => (
             <button
               key={filter}
               onClick={() => {
@@ -92,16 +92,15 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
         <div className="space-y-6">
           {expenses.length > 0 ? (
             expenses.map((expense) => (
-              <div
-                key={expense._id}
-                className="border-b border-gray-200 pb-4"
-              >
+              <div key={expense._id} className="border-b border-gray-200 pb-4">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm text-gray-600">
                     {formatDate(expense.date || "")}
                   </span>
                   <button
-                    onClick={() => handleDeleteExpense(expense._id!)}
+                    onClick={() =>
+                      handleDeleteExpense && handleDeleteExpense(expense._id!)
+                    }
                     className="text-red-500 hover:text-red-700 text-sm"
                   >
                     Delete
@@ -112,9 +111,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
                     <div className="font-medium text-gray-800">
                       {expense.category}
                     </div>
-                    <div className="text-gray-600">
-                      {expense.description}
-                    </div>
+                    <div className="text-gray-600">{expense.description}</div>
                   </div>
                   <div className="text-right font-medium text-gray-800">
                     Rs.{expense.amount.toFixed(2)}
@@ -131,7 +128,9 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
           {/* Add New Expense Button */}
           <div className="pt-4">
             <button
-              onClick={() => setShowAddExpenseModal(true)}
+              onClick={() =>
+                setShowAddExpenseModal && setShowAddExpenseModal(true)
+              }
               className="w-full border-2 border-dashed border-gray-300 rounded-lg py-4 text-gray-500 hover:border-teal-500 hover:text-teal-500 transition-colors flex items-center justify-center space-x-2"
             >
               <span className="text-xl">+</span>

@@ -13,8 +13,10 @@ import { expenseService } from "../services/expenseService";
 interface StaticChartProps {
   startDate: string;
   endDate: string;
-  setStartDate: (date: string) => void;
-  setEndDate: (date: string) => void;
+  setStartDate?: (date: string) => void;
+  setEndDate?: (date: string) => void;
+  title?: string; // Add optional title prop
+  allowDateSelection?: boolean; // Add flag to control UI elements
 }
 
 // Category colors for consistency
@@ -43,7 +45,6 @@ const StaticChart: React.FC<StaticChartProps> = ({
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
-  
 
   // Set default date range to current month on component mount
   useEffect(() => {
@@ -63,8 +64,12 @@ const StaticChart: React.FC<StaticChartProps> = ({
     const formattedLastDay = formatDate(lastDay);
 
     // Set the dates
-    setStartDate(formattedFirstDay);
-    setEndDate(formattedLastDay);
+    if (setStartDate) {
+      setStartDate(formattedFirstDay);
+    }
+    if (setEndDate) {
+      setEndDate(formattedLastDay);
+    }
 
     // Explicitly fetch data immediately using these values
     const fetchInitialData = async () => {
@@ -220,7 +225,7 @@ const StaticChart: React.FC<StaticChartProps> = ({
             <input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
+              onChange={(e) => setStartDate && setStartDate(e.target.value)}
               className="px-3 py-1 border border-gray-300 rounded text-sm"
             />
           </div>
@@ -229,7 +234,7 @@ const StaticChart: React.FC<StaticChartProps> = ({
             <input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
+              onChange={(e) => setEndDate && setEndDate(e.target.value)}
               className="px-3 py-1 border border-gray-300 rounded text-sm"
             />
           </div>
