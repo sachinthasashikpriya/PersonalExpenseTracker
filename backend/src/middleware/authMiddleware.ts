@@ -1,53 +1,54 @@
 // backend/src/middleware/authMiddleware.ts
 import { Request, Response, NextFunction } from 'express';
-import { verifyToken } from '../utils/jwtUtils';
+import jwt from 'jsonwebtoken';
 import User from '../models/UserModel';
 
-// Extend Express Request interface to include user
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
-}
-
-export const protect = async (
-  req: Request, 
-  res: Response, 
-  next: NextFunction
-) => {
+export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let token;
+    // Add debugging
+    console.log("Auth headers:", req.headers.authorization);
     
-    // Check for token in headers
-    if (req.headers.authorization && 
-        req.headers.authorization.startsWith('Bearer')) {
+    // Get token from header
+    let token;
+    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
+      console.log("Token extracted:", token.substring(0, 15) + '...');
     }
     
     if (!token) {
+      console.log("No token found in request");
       return res.status(401).json({ message: 'Not authorized, no token' });
     }
     
-    // Verify token
-    const decoded = verifyToken(token);
-    
-    if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
-      return res.status(401).json({ message: 'Not authorized, invalid token' });
+    try {
+      // Verify token
+      const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+      const decoded = jwt.verify(token, JWT_SECRET);
+      console.log("Token decoded:", decoded);
+      
+      if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
+        console.log("Invalid token format", decoded);
+        return res.status(401).json({ message: 'Invalid token format' });
+      }
+      
+      // Find user by id
+      const user = await User.findById(decoded.id);
+      
+      if (!user) {
+        console.log("User not found for id:", decoded.id);
+        return res.status(401).json({ message: 'User not found' });
+      }
+      
+      // Set user in request
+      req.user = user;
+      console.log("User found and set in request:", user._id);
+      next();
+    } catch (error) {
+      console.error("Token verification error:", error);
+      return res.status(401).json({ message: 'Invalid token' });
     }
-    
-    // Find user by id
-    const user = await User.findById(decoded.id).select('-password');
-    
-    if (!user) {
-      return res.status(401).json({ message: 'Not authorized, user not found' });
-    }
-    
-    // Attach user to request
-    req.user = user;
-    next();
   } catch (error) {
+    console.error("Auth middleware error:", error);
     res.status(401).json({ message: 'Not authorized' });
   }
 };

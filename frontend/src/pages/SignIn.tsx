@@ -1,11 +1,11 @@
-// frontend/src/pages/Login.tsx
 import { Eye, EyeOff } from "lucide-react";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { authService } from "../services/authService";
+import { useAuth } from "../hooks/useAuth";
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,22 +25,40 @@ const LoginPage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    if (!formData.email || !formData.password) {
+      setError("Please enter both email and password");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
 
     try {
-      await authService.login({
-        email: formData.email,
-        password: formData.password,
-      });
-      navigate("/dashboard");
+      // Call login with separate parameters instead of an object
+      await login(formData.email, formData.password);
+
+      console.log("Login successful, token stored");
+
+      // Add a small delay to ensure state updates before navigation
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 100);
     } catch (err: any) {
+      console.error("Login error:", err);
       setError(
         err.response?.data?.message ||
           "Login failed. Please check your credentials."
       );
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Handle form submission when pressing Enter
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleSubmit();
     }
   };
 
@@ -116,7 +134,13 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <div className="space-y-5">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+              className="space-y-5"
+            >
               {/* Email Input */}
               <div>
                 <input
@@ -125,6 +149,7 @@ const LoginPage: React.FC = () => {
                   placeholder="Email Address"
                   value={formData.email}
                   onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
@@ -137,6 +162,7 @@ const LoginPage: React.FC = () => {
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
                   className="w-full px-6 py-4 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-200 pr-14"
                 />
                 <button
@@ -150,7 +176,7 @@ const LoginPage: React.FC = () => {
 
               {/* Login Button */}
               <button
-                onClick={handleSubmit}
+                type="submit"
                 disabled={isLoading}
                 className="w-full bg-teal-500 hover:bg-teal-600 text-white font-semibold py-4 px-6 rounded-2xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none mt-6"
               >
@@ -163,13 +189,14 @@ const LoginPage: React.FC = () => {
                   "Sign In"
                 )}
               </button>
-            </div>
+            </form>
 
             {/* Sign Up Link */}
             <div className="mt-8 text-center">
               <p className="text-gray-600">
                 Don't have an account?{" "}
                 <button
+                  type="button"
                   className="text-teal-600 hover:text-teal-700 font-semibold transition-colors"
                   onClick={() => navigate("/signup")}
                 >

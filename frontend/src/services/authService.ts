@@ -26,7 +26,7 @@ export interface UserData {
 export const authService = {
   register: async (userData: RegisterData): Promise<UserData> => {
     try {
-      const response = await API.post('/auth/register', userData);
+      const response = await API.post('/auth/signup', userData);
       
       // Store token in localStorage
       if (response.data.token) {
@@ -43,7 +43,7 @@ export const authService = {
   
   login: async (credentials: LoginData): Promise<UserData> => {
     try {
-      const response = await API.post('/auth/login', credentials);
+      const response = await API.post('/auth/signin', credentials);
       
       // Store token in localStorage
       if (response.data.token) {

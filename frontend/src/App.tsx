@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./components/protectedRoute";
 import Createbudget from "./pages/Createbudget";
 import Dashboard from "./pages/Dashboard";
 import Expense from "./pages/Expense";
@@ -7,7 +8,6 @@ import Reminder from "./pages/Reminder";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import Profile from "./pages/profile";
-import ProtectedRoute from "./components/protectedRoute";
 
 function App() {
   return (
@@ -26,9 +26,10 @@ function App() {
         <Route path="/reminder" element={<Reminder />} />
         <Route path="/profile" element={<Profile />} />
       </Route>
-      
+
       {/* Default Route */}
-      <Route path="/" element={<Navigate to="/signin" />} />
+      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
   );
 }

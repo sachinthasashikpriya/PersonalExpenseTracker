@@ -22,15 +22,22 @@ export const expenseService = {
   },
 
   // Create new expense
-  createExpense: async (expense: Omit<Expense, '_id' | 'createdAt'>): Promise<Expense> => {
-    try {
-      const response = await API.post('/expense', expense);
-      return response.data;
-    } catch (error) {
-      console.error('Error creating expense:', error);
-      throw error;
+ 
+createExpense: async (expense: Omit<Expense, '_id' | 'createdAt'>): Promise<Expense> => {
+  try {
+    console.log("Sending expense data:", expense);
+    const response = await API.post('/expense', expense);
+    return response.data;
+  } catch (error: any) {
+    console.error('Error creating expense:', error);
+    // Log more detailed error info if available
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
     }
-  },
+    throw error;
+  }
+},
 
   // Delete expense
   deleteExpense: async (id: string): Promise<void> => {

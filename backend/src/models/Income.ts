@@ -22,7 +22,7 @@ const incomeSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    // required: true // Add this when you implement user authentication
+    required: true // Add this when you implement user authentication
   }
 }, {
   timestamps: true

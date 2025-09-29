@@ -43,11 +43,21 @@ export const createExpense = async (req: Request, res: Response) => {
   try {
     const { category, description, amount, date } = req.body;
 
+     // Add debug logs
+     console.log("User in request:", req.user);
+     console.log("Creating expense for user:", req.user?._id);
+     
+     // Make sure req.user exists
+     if (!req.user) {
+       return res.status(401).json({ message: 'User not authenticated' });
+     }
+
     const expense = new Expense({
       category,
       description,
       amount,
-      date: date ? new Date(date) : Date.now(),  // Use provided date or default to now
+      date: date ? new Date(date) : Date.now(),
+      userId: req.user._id // Use provided date or default to now
     });
 
     const savedExpense = await expense.save();
