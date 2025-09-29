@@ -31,16 +31,19 @@ API.interceptors.request.use(
   }
 );
 
+// frontend/src/services/api.ts
 // Response interceptor to handle auth errors
 API.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.log("401 error received, clearing localStorage");
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      // Optionally redirect to login page
-      window.location.href = '/signin';
+      console.log("401 error received:", error.response.data);
+      
+      // Dispatch custom event with error details
+      const errorEvent = new CustomEvent('auth-error', { 
+        detail: error.response.data 
+      });
+      window.dispatchEvent(errorEvent);
     }
     return Promise.reject(error);
   }

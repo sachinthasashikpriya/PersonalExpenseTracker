@@ -1,56 +1,66 @@
-// backend/src/models/UserModel.ts
 import bcrypt from 'bcryptjs';
-import mongoose, { Document, Model, Schema } from 'mongoose';
+import mongoose, { Document, Schema } from 'mongoose';
 
-// Interface for the User document properties
-interface IUserDocument extends Document {
+export interface IUser extends Document {
+  _id: mongoose.Types.ObjectId;
   firstname: string;
   lastname: string;
   username: string;
   email: string;
   password: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-// Interface for the User document methods
-interface IUserMethods {
   matchPassword(enteredPassword: string): Promise<boolean>;
 }
 
-// Interface that combines document properties and methods
-interface IUser extends IUserDocument, IUserMethods {}
-
-// Interface for the User model (static methods can be added here if needed)
-interface IUserModel extends Model<IUser> {}
-
-const userSchema = new Schema<IUser>({
-  firstname: { type: String, required: true },
-  lastname: { type: String, required: true },
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true }
-}, { timestamps: true });
+const userSchema = new Schema<IUser>(
+  {
+    firstname: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastname: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    username: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
+    password: {
+      type: String,
+      required: true,
+      select: false, // Don't return password by default
+    },
+  },
+  {
+    timestamps: true,
+  }
+);
 
 // Hash password before saving
-userSchema.pre<IUser>('save', async function(next) {
-  // Only hash the password if it has been modified (or is new)
-  if (!this.isModified('password')) return next();
-  
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+userSchema.pre('save', async function (next) {
+  if (!this.isModified('password')) {
     next();
-  } catch (error) {
-    next(error as Error);
   }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
-// Method to check password - properly typed
-userSchema.methods.matchPassword = async function(this: IUser, enteredPassword: string): Promise<boolean> {
+// Method to compare passwords
+userSchema.methods.matchPassword = async function (enteredPassword: string): Promise<boolean> {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-// Create and export the model with proper typing
-const User = mongoose.model<IUser, IUserModel>('User', userSchema);
+const User = mongoose.model<IUser>('User', userSchema);
+
 export default User;

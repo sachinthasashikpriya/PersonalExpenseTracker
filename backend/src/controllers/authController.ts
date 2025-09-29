@@ -1,10 +1,9 @@
-// backend/src/controllers/authController.ts
 import { Request, Response } from 'express';
-import User from '../models/UserModel';
+import User, { IUser } from '../models/UserModel';
 import { generateToken } from '../utils/jwtUtils';
 
 // Register new user
-export const register = async (req: Request, res: Response) => {
+export const register = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { firstname, lastname, username, email, password } = req.body;
     
@@ -33,12 +32,14 @@ export const register = async (req: Request, res: Response) => {
       username,
       email,
       password
-    }) as { _id: string, firstname: string, lastname: string, username: string, email: string };
+    }) as IUser;
     
-    // Generate token
+    // Generate token - Convert ObjectId to string
     const token = generateToken(user._id.toString());
     
-    res.status(201).json({
+    console.log('✓ User registered:', email);
+    
+    return res.status(201).json({
       _id: user._id,
       firstname: user.firstname,
       lastname: user.lastname,
@@ -47,45 +48,90 @@ export const register = async (req: Request, res: Response) => {
       token
     });
   } catch (error) {
-    console.error('Registration error:', error);
-    res.status(500).json({ 
-      message: error instanceof Error ? error.message : 'An unknown error occurred' 
+    console.error('✗ Registration error:', error);
+    return res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Registration failed' 
     });
   }
 };
 
 // Login user
-export const login = async (req: Request, res: Response) => {
+export const login = async (req: Request, res: Response): Promise<Response> => {
   try {
     const { email, password } = req.body;
     
-    // Validate required fields
+    console.log('→ Login attempt for:', email);
+    
+    // Validate input
     if (!email || !password) {
       return res.status(400).json({ 
         message: 'Email and password are required' 
       });
     }
     
-    // Find user and include password field
-    const user = await User.findOne({ email }).select('+password') as { _id: string, firstname: string, lastname: string, username: string, email: string, matchPassword: (password: string) => Promise<boolean> };
+    // Find user with password field included
+    const user = await User.findOne({ email }).select('+password') as IUser | null;
     
-    // Check if user exists and password matches
-    if (user && await user.matchPassword(password)) {
-      res.json({
-        _id: user._id,
-        firstname: user.firstname,
-        lastname: user.lastname,
-        username: user.username,
-        email: user.email,
-        token: generateToken(user._id.toString())
+    if (!user) {
+      console.log('✗ User not found:', email);
+      return res.status(401).json({ 
+        message: 'Invalid email or password' 
       });
-    } else {
-      res.status(401).json({ message: 'Invalid email or password' });
     }
+    
+    // Verify password
+    const isPasswordMatch = await user.matchPassword(password);
+    
+    if (!isPasswordMatch) {
+      console.log('✗ Invalid password for:', email);
+      return res.status(401).json({ 
+        message: 'Invalid email or password' 
+      });
+    }
+    
+    // Generate token - Convert ObjectId to string
+    const token = generateToken(user._id.toString());
+    
+    console.log('✓ Login successful for:', email);
+    console.log('✓ Token length:', token.length);
+    
+    // Return user data with token
+    return res.status(200).json({
+      _id: user._id,
+      firstname: user.firstname,
+      lastname: user.lastname,
+      username: user.username,
+      email: user.email,
+      token
+    });
   } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ 
-      message: error instanceof Error ? error.message : 'An unknown error occurred' 
+    console.error('✗ Login error:', error);
+    return res.status(500).json({ 
+      message: 'Server error during login' 
+    });
+  }
+};
+
+// Get current user profile (protected route example)
+export const getProfile = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        message: 'Not authorized' 
+      });
+    }
+    
+    return res.status(200).json({
+      _id: req.user._id,
+      firstname: req.user.firstname,
+      lastname: req.user.lastname,
+      username: req.user.username,
+      email: req.user.email,
+    });
+  } catch (error) {
+    console.error('✗ Get profile error:', error);
+    return res.status(500).json({ 
+      message: 'Server error' 
     });
   }
 };

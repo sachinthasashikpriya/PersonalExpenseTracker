@@ -1,54 +1,81 @@
-// backend/src/middleware/authMiddleware.ts
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/UserModel';
+import User, { IUser } from '../models/UserModel';
+
+interface JwtPayload {
+  id: string;
+  iat: number;
+  exp: number;
+}
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Add debugging
-    console.log("Auth headers:", req.headers.authorization);
+    let token: string | undefined;
     
-    // Get token from header
-    let token;
+    // Extract token from Authorization header
     if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
       token = req.headers.authorization.split(' ')[1];
-      console.log("Token extracted:", token.substring(0, 15) + '...');
+      console.log('✓ Token extracted from Authorization header');
     }
     
     if (!token) {
-      console.log("No token found in request");
-      return res.status(401).json({ message: 'Not authorized, no token' });
+      console.log('✗ No token found in request');
+      return res.status(401).json({ 
+        message: 'Not authorized, no token',
+        code: 'NO_TOKEN'
+      });
     }
     
     try {
+      const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
+      
       // Verify token
-      const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
-      const decoded = jwt.verify(token, JWT_SECRET);
-      console.log("Token decoded:", decoded);
+      const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
+      console.log('✓ Token verified, user ID:', decoded.id);
       
-      if (!decoded || typeof decoded !== 'object' || !('id' in decoded)) {
-        console.log("Invalid token format", decoded);
-        return res.status(401).json({ message: 'Invalid token format' });
-      }
-      
-      // Find user by id
-      const user = await User.findById(decoded.id);
+      // Find user by ID and exclude password
+      const user = await User.findById(decoded.id).select('-password');
       
       if (!user) {
-        console.log("User not found for id:", decoded.id);
-        return res.status(401).json({ message: 'User not found' });
+        console.log('✗ User not found for ID:', decoded.id);
+        return res.status(401).json({ 
+          message: 'User not found',
+          code: 'USER_NOT_FOUND'
+        });
       }
       
-      // Set user in request
-      req.user = user;
-      console.log("User found and set in request:", user._id);
+      // Attach user to request
+      req.user = user as IUser;
+      console.log('✓ User authenticated:', user.email);
       next();
-    } catch (error) {
-      console.error("Token verification error:", error);
-      return res.status(401).json({ message: 'Invalid token' });
+      
+    } catch (error: any) {
+      console.error('✗ Token verification failed:', error.message);
+      
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({ 
+          message: 'Token expired',
+          code: 'TOKEN_EXPIRED'
+        });
+      }
+      
+      if (error.name === 'JsonWebTokenError') {
+        return res.status(401).json({ 
+          message: 'Invalid token',
+          code: 'INVALID_TOKEN'
+        });
+      }
+      
+      return res.status(401).json({ 
+        message: 'Not authorized',
+        code: 'AUTH_ERROR'
+      });
     }
   } catch (error) {
-    console.error("Auth middleware error:", error);
-    res.status(401).json({ message: 'Not authorized' });
+    console.error('✗ Auth middleware error:', error);
+    return res.status(500).json({ 
+      message: 'Server error',
+      code: 'SERVER_ERROR'
+    });
   }
 };

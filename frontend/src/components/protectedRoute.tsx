@@ -10,6 +10,7 @@ const ProtectedRoute: React.FC = () => {
     isAuthenticated,
     isLoading,
     path: location.pathname,
+    user: useAuth().user 
   });
 
   // Don't check authentication while still loading
