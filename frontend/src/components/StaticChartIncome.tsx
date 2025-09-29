@@ -8,24 +8,22 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { expenseService } from "../services/expenseService";
+import { incomeService } from "../services/incomeService";
 
 interface StaticChartProps {
   startDate: string;
   endDate: string;
-  setStartDate?: (date: string) => void;
-  setEndDate?: (date: string) => void;
-  title?: string; // Add optional title prop
-  allowDateSelection?: boolean; // Add flag to control UI elements
+  setStartDate: (date: string) => void;
+  setEndDate: (date: string) => void;
 }
 
 // Category colors for consistency
 const CATEGORY_COLORS = {
-  Food: "#1e40af",
-  Transport: "#3b82f6",
-  Entertainment: "#60a5fa",
-  Shopping: "#f59e0b",
-  Bills: "#ef4444",
+  Salary: "#1e40af",
+  Investments: "#3b82f6",
+  RentalIncome: "#60a5fa",
+  //   Shopping: "#f59e0b",
+  //   Bills: "#ef4444",
   Other: "#6b7280",
 };
 
@@ -35,13 +33,7 @@ const StaticChart: React.FC<StaticChartProps> = ({
   setStartDate,
   setEndDate,
 }) => {
-  interface ChartData {
-    day: string;
-    date: string;
-    [category: string]: number | string;
-  }
-
-  const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [chartData, setChartData] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<string[]>([]);
@@ -64,12 +56,8 @@ const StaticChart: React.FC<StaticChartProps> = ({
     const formattedLastDay = formatDate(lastDay);
 
     // Set the dates
-    if (setStartDate) {
-      setStartDate(formattedFirstDay);
-    }
-    if (setEndDate) {
-      setEndDate(formattedLastDay);
-    }
+    setStartDate(formattedFirstDay);
+    setEndDate(formattedLastDay);
 
     // Explicitly fetch data immediately using these values
     const fetchInitialData = async () => {
@@ -78,7 +66,7 @@ const StaticChart: React.FC<StaticChartProps> = ({
         console.log(
           `Initial fetch from ${formattedFirstDay} to ${formattedLastDay}`
         );
-        const response = await expenseService.getExpensesByDateRange(
+        const response = await incomeService.getIncomesByDateRange(
           formattedFirstDay,
           formattedLastDay
         );
@@ -88,12 +76,12 @@ const StaticChart: React.FC<StaticChartProps> = ({
         }
 
         // Process data for chart
-        const processedData = processExpenseData(response);
+        const processedData = processIncomeData(response);
         setChartData(processedData.data);
         setCategories(processedData.categories);
         setError(null);
       } catch (err) {
-        console.error("Error fetching initial expense data:", err);
+        console.error("Error fetching initial income data:", err);
         setError("Failed to load chart data");
         setChartData([]);
         setCategories([]);
@@ -117,16 +105,16 @@ const StaticChart: React.FC<StaticChartProps> = ({
 
     // Only fetch if we have both dates and this isn't the initial load
     if (startDate && endDate) {
-      fetchExpenseData();
+      fetchIncomeData();
     }
   }, [startDate, endDate]);
 
-  const fetchExpenseData = async () => {
+  const fetchIncomeData = async () => {
     try {
       setLoading(true);
 
-      // Call your backend API to get expenses for date range
-      const response = await expenseService.getExpensesByDateRange(
+      // Call your backend API to get incomes for date range
+      const response = await incomeService.getIncomesByDateRange(
         startDate,
         endDate
       );
@@ -136,12 +124,12 @@ const StaticChart: React.FC<StaticChartProps> = ({
       }
 
       // Process data for chart
-      const processedData = processExpenseData(response);
+      const processedData = processIncomeData(response);
       setChartData(processedData.data);
       setCategories(processedData.categories);
       setError(null);
     } catch (err) {
-      console.error("Error fetching expense data for chart:", err);
+      console.error("Error fetching income data for chart:", err);
       setError("Failed to load chart data");
       setChartData([]);
       setCategories([]);
@@ -150,16 +138,16 @@ const StaticChart: React.FC<StaticChartProps> = ({
     }
   };
 
-  // Process raw expense data into chart format
-  const processExpenseData = (expenses: any[]) => {
-    if (!expenses || expenses.length === 0) {
+  // Process raw income data into chart format
+  const processIncomeData = (incomes: any[]) => {
+    if (!incomes || incomes.length === 0) {
       return { data: [], categories: [] };
     }
 
     // Get all unique categories
-    const allCategories = Array.from(new Set(expenses.map((e) => e.category)));
+    const allCategories = Array.from(new Set(incomes.map((e) => e.category)));
 
-    // Group expenses by day
+    // Group incomes by day
     const groupedByDay: Record<string, Record<string, number>> = {};
 
     // Initialize each day with zero values for each category
@@ -181,13 +169,13 @@ const StaticChart: React.FC<StaticChartProps> = ({
     }
 
     // Fill in actual values
-    expenses.forEach((expense) => {
-      const dayKey = new Date(expense.date).toISOString().split("T")[0];
-      const category = expense.category;
+    incomes.forEach((income) => {
+      const dayKey = new Date(income.date).toISOString().split("T")[0];
+      const category = income.category;
 
       if (groupedByDay[dayKey]) {
         groupedByDay[dayKey][category] =
-          (groupedByDay[dayKey][category] || 0) + expense.amount;
+          (groupedByDay[dayKey][category] || 0) + income.amount;
       }
     });
 
@@ -225,7 +213,7 @@ const StaticChart: React.FC<StaticChartProps> = ({
             <input
               type="date"
               value={startDate}
-              onChange={(e) => setStartDate && setStartDate(e.target.value)}
+              onChange={(e) => setStartDate(e.target.value)}
               className="px-3 py-1 border border-gray-300 rounded text-sm"
             />
           </div>
@@ -234,7 +222,7 @@ const StaticChart: React.FC<StaticChartProps> = ({
             <input
               type="date"
               value={endDate}
-              onChange={(e) => setEndDate && setEndDate(e.target.value)}
+              onChange={(e) => setEndDate(e.target.value)}
               className="px-3 py-1 border border-gray-300 rounded text-sm"
             />
           </div>
@@ -253,7 +241,7 @@ const StaticChart: React.FC<StaticChartProps> = ({
           </div>
         ) : chartData.length === 0 ? (
           <div className="flex items-center justify-center h-full text-gray-500">
-            <p>No expense data available for selected date range</p>
+            <p>No income data available for selected date range</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">

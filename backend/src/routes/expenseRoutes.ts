@@ -6,9 +6,11 @@ import {
     getExpensesByDate,
     getExpensesByDateRange
 } from '../controllers/expenseController';
+import { protect } from '../middleware/authMiddleware';
   
 
 const router = express.Router();
+router.use(protect); // Apply authentication middleware to all routes
 
 router.get('/', getAllExpenses);
 router.post('/', createExpense);

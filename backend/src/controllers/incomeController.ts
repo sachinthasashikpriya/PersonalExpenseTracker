@@ -1,10 +1,10 @@
 import { Request, Response } from 'express';
-import Expense from '../models/Expense';
+import Income from '../models/Income';
 
-export const getAllExpenses = async (_req: Request, res: Response) => {
+export const getAllIncomes = async (_req: Request, res: Response) => {
   try {
-    const expenses = await Expense.find().sort({ date: -1 });
-    res.json(expenses);
+    const incomes = await Income.find().sort({ date: -1 });
+    res.json(incomes);
   } catch (error) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
   }
@@ -12,8 +12,8 @@ export const getAllExpenses = async (_req: Request, res: Response) => {
 
 
 
-// In your expenseController.ts
-export const getExpensesByDate = async (req:Request, res:Response) => {
+// In your incomeController.ts
+export const getIncomesByDate = async (req:Request, res:Response) => {
   try {
     const dateStr = req.params.date; // Format: YYYY-MM-DD
     
@@ -26,51 +26,41 @@ export const getExpensesByDate = async (req:Request, res:Response) => {
     
     console.log("Querying from", startDate, "to", endDate); // Debugging
     
-    const expenses = await Expense.find({
+    const incomes = await Income.find({
       date: {
         $gte: startDate,
         $lte: endDate
       }
     }).sort({ date: -1 });
     
-    res.status(200).json(expenses);
+    res.status(200).json(incomes);
   } catch (error) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
   }
 };
 
-export const createExpense = async (req: Request, res: Response) => {
+export const createIncome = async (req: Request, res: Response) => {
   try {
     const { category, description, amount, date } = req.body;
 
-     // Add debug logs
-     console.log("User in request:", req.user);
-     console.log("Creating expense for user:", req.user?._id);
-     
-     // Make sure req.user exists
-     if (!req.user) {
-       return res.status(401).json({ message: 'User not authenticated' });
-     }
-
-    const expense = new Expense({
+    const income = new Income({
       category,
       description,
       amount,
-      date: date ? new Date(date) : Date.now(),
-      userId: req.user._id // Use provided date or default to now
+      date: date ? new Date(date) : Date.now(),  // Use provided date or default to now
     });
 
-    const savedExpense = await expense.save();
-    res.status(201).json(savedExpense);
+    const savedIncome = await income.save();
+    res.status(201).json(savedIncome);
   } catch (error) {
     res.status(400).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
   }
 };
 
-export const deleteExpense = async (req: Request, res: Response) => {
+export const deleteIncome = async (req: Request, res: Response) => {
   try {
-    const expense = await Expense.findByIdAndDelete(req.params.id);
-    if (!expense) {
+    const income = await Income.findByIdAndDelete(req.params.id);
+    if (!income) {
       return res.status(404).json({ message: 'Expense not found' });
     }
     res.json({ message: 'Expense deleted successfully' });
@@ -79,7 +69,7 @@ export const deleteExpense = async (req: Request, res: Response) => {
   }
 };
 
-  export const getExpensesByDateRange = async (req: Request, res: Response) => {
+  export const getIncomesByDateRange = async (req: Request, res: Response) => {
     try {
       const { startDate, endDate } = req.params;
       
@@ -90,14 +80,14 @@ export const deleteExpense = async (req: Request, res: Response) => {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
       
-      const expenses = await Expense.find({
+      const incomes = await Income.find({
         date: {
           $gte: start,
           $lte: end
         }
       }).sort({ date: 1 });
       
-      res.status(200).json(expenses);
+      res.status(200).json(incomes);
     } catch (error) {
       res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
     }

@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
-const expenseSchema = new mongoose.Schema({
+const incomeSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Food', 'Transport', 'Entertainment', 'Shopping', 'Bills']
+    enum: ['Salary', 'Investments', 'Rental income', 'Other']
   },
   description: {
     type: String,
@@ -22,10 +22,10 @@ const expenseSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true // Add this when you implement user authentication
   }
 }, {
   timestamps: true
 });
 
-export default mongoose.model('Expense', expenseSchema);
+export default mongoose.model('Income', incomeSchema);

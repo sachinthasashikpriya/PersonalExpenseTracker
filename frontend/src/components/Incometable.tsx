@@ -1,10 +1,10 @@
 import React from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import type { Expense } from "../services/expenseService";
+import type { Income } from "../services/incomeService";
 
-interface ExpenseTableProps {
-  expenses: Expense[];
+interface incomeTableProps {
+  incomes: Income[];
   loading: boolean;
   activeFilter: string;
   setActiveFilter: (filter: string) => void;
@@ -12,12 +12,12 @@ interface ExpenseTableProps {
   setSelectedDate: (date: Date | null) => void;
   showCalendar: boolean;
   setShowCalendar: (show: boolean) => void;
-  handleDeleteExpense?: (id: string) => void;
-  setShowAddExpenseModal?: (show: boolean) => void;
+  handleDeleteIncome: (id: string) => void;
+  setShowAddIncomeModal: (show: boolean) => void;
 }
 
-const ExpenseTable: React.FC<ExpenseTableProps> = ({
-  expenses,
+const incomeTable: React.FC<incomeTableProps> = ({
+  incomes,
   loading,
   activeFilter,
   setActiveFilter,
@@ -25,8 +25,8 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
   setSelectedDate,
   showCalendar,
   setShowCalendar,
-  handleDeleteExpense,
-  setShowAddExpenseModal,
+  handleDeleteIncome,
+  setShowAddIncomeModal,
 }) => {
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -42,7 +42,7 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
     <div className="col-span-2 bg-white rounded-lg shadow-lg p-6">
       <div className="flex justify-between items-center mb-4">
         <div className="space-x-2">
-          {["Today", "Yesterday", "Week", "Calendar"].map((filter) => (
+          {["Today", "Yesterday", "Calendar"].map((filter) => (
             <button
               key={filter}
               onClick={() => {
@@ -80,27 +80,25 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
           </div>
           {selectedDate && (
             <div className="mt-2 text-sm text-gray-600">
-              Showing expenses for: {formatDate(selectedDate.toISOString())}
+              Showing incomes for: {formatDate(selectedDate.toISOString())}
             </div>
           )}
         </div>
       )}
 
       {loading ? (
-        <div className="text-center py-8">Loading expenses...</div>
+        <div className="text-center py-8">Loading incomes...</div>
       ) : (
         <div className="space-y-6">
-          {expenses.length > 0 ? (
-            expenses.map((expense) => (
-              <div key={expense._id} className="border-b border-gray-200 pb-4">
+          {incomes.length > 0 ? (
+            incomes.map((income) => (
+              <div key={income._id} className="border-b border-gray-200 pb-4">
                 <div className="flex justify-between items-start mb-2">
                   <span className="text-sm text-gray-600">
-                    {formatDate(expense.date || "")}
+                    {formatDate(income.date || "")}
                   </span>
                   <button
-                    onClick={() =>
-                      handleDeleteExpense && handleDeleteExpense(expense._id!)
-                    }
+                    onClick={() => handleDeleteIncome(income._id!)}
                     className="text-red-500 hover:text-red-700 text-sm"
                   >
                     Delete
@@ -109,32 +107,30 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <div className="font-medium text-gray-800">
-                      {expense.category}
+                      {income.category}
                     </div>
-                    <div className="text-gray-600">{expense.description}</div>
+                    <div className="text-gray-600">{income.description}</div>
                   </div>
                   <div className="text-right font-medium text-gray-800">
-                    Rs.{expense.amount.toFixed(2)}
+                    Rs.{income.amount.toFixed(2)}
                   </div>
                 </div>
               </div>
             ))
           ) : (
             <div className="text-center py-4 text-gray-500">
-              No expenses found for {activeFilter.toLowerCase()}
+              No incomes found for {activeFilter.toLowerCase()}
             </div>
           )}
 
-          {/* Add New Expense Button */}
+          {/* Add New income Button */}
           <div className="pt-4">
             <button
-              onClick={() =>
-                setShowAddExpenseModal && setShowAddExpenseModal(true)
-              }
+              onClick={() => setShowAddIncomeModal(true)}
               className="w-full border-2 border-dashed border-gray-300 rounded-lg py-4 text-gray-500 hover:border-teal-500 hover:text-teal-500 transition-colors flex items-center justify-center space-x-2"
             >
               <span className="text-xl">+</span>
-              <span>Add New Expense</span>
+              <span>Add New income</span>
             </button>
           </div>
         </div>
@@ -143,4 +139,4 @@ const ExpenseTable: React.FC<ExpenseTableProps> = ({
   );
 };
 
-export default ExpenseTable;
+export default incomeTable;

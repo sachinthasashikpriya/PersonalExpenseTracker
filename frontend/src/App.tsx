@@ -1,27 +1,37 @@
-import { Routes, Route } from 'react-router-dom'
-import Dashboard from './pages/Dashboard'
-import SignIn from './pages/SignIn'
-import SignUp from './pages/SignUp'
-import Expense from './pages/Expense'
-import Income from './pages/Income'
-import Createbudget from './pages/Createbudget'
-import Reminder from './pages/Reminder'
-import Profile from './pages/profile'
-
+import { Navigate, Route, Routes } from "react-router-dom";
+import ProtectedRoute from "./components/protectedRoute";
+import Createbudget from "./pages/Createbudget";
+import Dashboard from "./pages/Dashboard";
+import Expense from "./pages/Expense";
+import Income from "./pages/Income";
+import Reminder from "./pages/Reminder";
+import SignIn from "./pages/SignIn";
+import SignUp from "./pages/SignUp";
+import Profile from "./pages/profile";
 
 function App() {
   return (
     <Routes>
-      <Route path="/" element={<Dashboard />} />
-      <Route path="/login" element={<SignIn />} />
-      <Route path="/register" element={<SignUp />} />
-      <Route path="/expense" element={<Expense />} />
-      <Route path="/income" element={<Income />} />
-      <Route path="/create-budget" element={<Createbudget />} />
-      <Route path="/reminder" element={<Reminder />} />
-      <Route path="/profile" element={<Profile />} />
+      {/* Public Routes */}
+      <Route path="/signin" element={<SignIn />} />
+      <Route path="/signup" element={<SignUp />} />
+
+      {/* Protected Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<Dashboard />} />
+
+        <Route path="/expense" element={<Expense />} />
+        <Route path="/income" element={<Income />} />
+        <Route path="/create-budget" element={<Createbudget />} />
+        <Route path="/reminder" element={<Reminder />} />
+        <Route path="/profile" element={<Profile />} />
+      </Route>
+
+      {/* Default Route */}
+      <Route path="/" element={<Navigate to="/dashboard" />} />
+      <Route path="*" element={<Navigate to="/dashboard" />} />
     </Routes>
-  )
+  );
 }
 
-export default App
+export default App;
