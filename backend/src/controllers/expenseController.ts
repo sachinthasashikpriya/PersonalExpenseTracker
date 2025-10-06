@@ -1,9 +1,15 @@
 import { Request, Response } from 'express';
 import Expense from '../models/Expense';
 
-export const getAllExpenses = async (_req: Request, res: Response) => {
+export const getAllExpenses = async (req: Request, res: Response) => {
   try {
-    const expenses = await Expense.find().sort({ date: -1 });
+    // Ensure req.user exists
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
+    // Fetch expenses for the logged-in user
+    const expenses = await Expense.find({ userId: req.user._id }).sort({ date: -1 });
     res.json(expenses);
   } catch (error) {
     res.status(500).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
@@ -15,6 +21,10 @@ export const getAllExpenses = async (_req: Request, res: Response) => {
 // In your expenseController.ts
 export const getExpensesByDate = async (req:Request, res:Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const dateStr = req.params.date; // Format: YYYY-MM-DD
     
     // Create date range for the full day (midnight to midnight)
@@ -27,6 +37,7 @@ export const getExpensesByDate = async (req:Request, res:Response) => {
     console.log("Querying from", startDate, "to", endDate); // Debugging
     
     const expenses = await Expense.find({
+      userId: req.user._id, // Filter by userId
       date: {
         $gte: startDate,
         $lte: endDate
@@ -69,6 +80,10 @@ export const createExpense = async (req: Request, res: Response) => {
 
 export const deleteExpense = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
     const expense = await Expense.findByIdAndDelete(req.params.id);
     if (!expense) {
       return res.status(404).json({ message: 'Expense not found' });

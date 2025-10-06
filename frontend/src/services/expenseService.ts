@@ -7,6 +7,7 @@ export interface Expense {
   amount: number;
   date?: string;
   createdAt?: string;
+  userId: string;
 }
 
 export const expenseService = {
