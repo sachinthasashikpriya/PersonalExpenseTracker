@@ -96,6 +96,9 @@ export const deleteExpense = async (req: Request, res: Response) => {
 
   export const getExpensesByDateRange = async (req: Request, res: Response) => {
     try {
+      if (!req.user) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
       const { startDate, endDate } = req.params;
       
       // Create date range 

@@ -77,6 +77,13 @@ const IncomeComponent = () => {
   const handleAddIncome = async () => {
     if (newIncome.category && newIncome.description && newIncome.amount) {
       try {
+        const parsedAmount = parseFloat(newIncome.amount);
+
+        // Validate amount on frontend too
+        if (isNaN(parsedAmount) || parsedAmount <= 0) {
+          setError("Please enter a valid positive amount");
+          return;
+        }
         const incomeData: {
           category: string;
           description: string;
@@ -85,7 +92,7 @@ const IncomeComponent = () => {
         } = {
           category: newIncome.category,
           description: newIncome.description,
-          amount: parseFloat(newIncome.amount),
+          amount: parsedAmount, // Use the parsed amount
         };
 
         // Set date based on the active filter
@@ -181,7 +188,7 @@ const IncomeComponent = () => {
           />
         </div>
 
-        {/* Add Expense Modal */}
+        {/* Add Income Modal */}
         <AddIncomeModal
           showAddIncomeModal={showAddIncomeModal}
           setShowAddIncomeModal={setShowAddIncomeModal}

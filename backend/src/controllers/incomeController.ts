@@ -1,8 +1,13 @@
 import { Request, Response } from 'express';
 import Income from '../models/Income';
 
-export const getAllIncomes = async (_req: Request, res: Response) => {
+export const getAllIncomes = async (req: Request, res: Response) => {
   try {
+     // Ensure req.user exists
+     if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const incomes = await Income.find().sort({ date: -1 });
     res.json(incomes);
   } catch (error) {
@@ -15,6 +20,10 @@ export const getAllIncomes = async (_req: Request, res: Response) => {
 // In your incomeController.ts
 export const getIncomesByDate = async (req:Request, res:Response) => {
   try {
+      // Ensure req.user exists
+      if (!req.user) {
+        return res.status(401).json({ message: 'User not authenticated' });
+      }
     const dateStr = req.params.date; // Format: YYYY-MM-DD
     
     // Create date range for the full day (midnight to midnight)
@@ -41,13 +50,33 @@ export const getIncomesByDate = async (req:Request, res:Response) => {
 
 export const createIncome = async (req: Request, res: Response) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+    
     const { category, description, amount, date } = req.body;
+
+    // Validate required fields
+    if (!category || !description || !amount) {
+      return res.status(400).json({ message: 'Category, description, and amount are required' });
+    }
+
+    // Convert amount to number if it's a string
+    const parsedAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    
+    // Validate amount is a valid positive number
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      return res.status(400).json({ message: 'Amount must be a positive number' });
+    }
+    console.log('Received income data:', { category, description, amount, date });
+console.log('Amount type:', typeof amount);
 
     const income = new Income({
       category,
       description,
-      amount,
-      date: date ? new Date(date) : Date.now(),  // Use provided date or default to now
+      amount: parsedAmount, // Use parsed amount
+      date: date ? new Date(date) : Date.now(),
+      userId: req.user._id
     });
 
     const savedIncome = await income.save();
@@ -56,9 +85,13 @@ export const createIncome = async (req: Request, res: Response) => {
     res.status(400).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
   }
 };
-
 export const deleteIncome = async (req: Request, res: Response) => {
   try {
+    // Ensure req.user exists
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
     const income = await Income.findByIdAndDelete(req.params.id);
     if (!income) {
       return res.status(404).json({ message: 'Expense not found' });
@@ -72,7 +105,11 @@ export const deleteIncome = async (req: Request, res: Response) => {
   export const getIncomesByDateRange = async (req: Request, res: Response) => {
     try {
       const { startDate, endDate } = req.params;
-      
+      // Ensure req.user exists
+    if (!req.user) {
+      return res.status(401).json({ message: 'User not authenticated' });
+    }
+
       // Create date range 
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);

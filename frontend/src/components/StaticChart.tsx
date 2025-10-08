@@ -21,12 +21,12 @@ interface StaticChartProps {
 
 // Category colors for consistency
 const CATEGORY_COLORS = {
-  Food: "#1e40af",
+  Food: "#10b981",
   Transport: "#3b82f6",
-  Entertainment: "#60a5fa",
+  Entertainment: "#8b5cf6",
   Shopping: "#f59e0b",
   Bills: "#ef4444",
-  Other: "#6b7280",
+  Other: "#6b7280", // For any other categories
 };
 
 const StaticChart: React.FC<StaticChartProps> = ({

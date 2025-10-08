@@ -24,6 +24,7 @@ export const incomeService = {
   // Create new income
   createIncome: async (income: Omit<Income, '_id' | 'createdAt'>): Promise<Income> => {
     try {
+      console.log('Creating income with data:', income); // Debugging
       const response = await API.post('/income', income);
       return response.data;
     } catch (error) {

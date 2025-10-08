@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import CategoriesPieChart from "../components/PieChart";
 import ExpenseTable from "../components/Expensetable";
 import Mainnavbar from "../components/Mainnavbar";
+import CategoriesPieChart from "../components/PieChart";
 import StaticChart from "../components/StaticChart";
 import { expenseService, type Expense } from "../services/expenseService";
 
@@ -175,19 +175,24 @@ const Dashboard: React.FC = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Statistics Chart */}
-          <StaticChart
-            startDate={startDate}
-            endDate={endDate}
-            title="Last 7 Days" // Add a title prop to your component if needed
-            allowDateSelection={false} // Add this prop to disable the date picker UI
-        />
+          <div className="flex flex-col bg-white rounded-xl p-6 shadow-sm h-full">
+            <StaticChart
+              startDate={startDate}
+              endDate={endDate}
+              title="Last 7 Days" // Add a title prop to your component if needed
+              allowDateSelection={false} // Add this prop to disable the date picker UI
+            />
+          </div>
 
-        {/* Categories Chart */}
-        <CategoriesPieChart
-          activeFilter={activeFilter}
-          setActiveFilter={setActiveFilter}
-        />
-        {/* Expense Table */}
+          {/* Categories Chart */}
+          <div className="flex flex-col bg-white rounded-xl p-6 shadow-sm h-full">
+            <CategoriesPieChart
+              activeFilter={activeFilter}
+              setActiveFilter={setActiveFilter}
+            />
+          </div>
+          
+          {/* Expense Table */}
           <ExpenseTable
             expenses={expenses}
             loading={loading}

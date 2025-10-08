@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 import AddExpenseModal from "../components/AddExpenseModal";
 import ExpenseTable from "../components/Expensetable";
 import Mainnavbar from "../components/Mainnavbar";
@@ -117,6 +118,7 @@ const ExpenseComponent = () => {
         setNewExpense({ category: "", description: "", amount: "" });
         setShowAddExpenseModal(false);
         setError(null);
+        window.location.reload();
       } catch (err) {
         setError("Failed to add expense");
         console.error("Error adding expense:", err);
@@ -126,12 +128,37 @@ const ExpenseComponent = () => {
 
   const handleDeleteExpense = async (id: string) => {
     try {
-      await expenseService.deleteExpense(id);
-      setExpenses(expenses.filter((expense) => expense._id !== id));
-      setError(null);
+      // Show SweetAlert2 confirmation dialog
+      const result = await Swal.fire({
+        title: "Are you sure?",
+        text: "This action cannot be undone. Do you want to delete this expense?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+        confirmButtonText: "Yes, delete it!",
+        cancelButtonText: "Cancel",
+      });
+
+      // If the user confirms, proceed with deletion
+      if (result.isConfirmed) {
+        await expenseService.deleteExpense(id);
+        setExpenses(expenses.filter((expense) => expense._id !== id));
+        setError(null);
+
+        // Show success message
+        Swal.fire("Deleted!", "The expense has been deleted.", "success");
+      }
     } catch (err) {
       setError("Failed to delete expense");
       console.error("Error deleting expense:", err);
+
+      // Show error message
+      Swal.fire(
+        "Error!",
+        "Failed to delete the expense. Please try again.",
+        "error"
+      );
     }
   };
 
