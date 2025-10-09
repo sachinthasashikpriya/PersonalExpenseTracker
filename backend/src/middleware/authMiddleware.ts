@@ -1,11 +1,24 @@
+import dotenv from 'dotenv';
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import User, { IUser } from '../models/UserModel';
+
+// Ensure environment variables are loaded
+dotenv.config();
 
 interface JwtPayload {
   id: string;
   iat: number;
   exp: number;
+}
+
+// Get JWT secret from environment variables
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Verify JWT_SECRET is available
+if (!JWT_SECRET) {
+  console.error('❌ CRITICAL ERROR: JWT_SECRET is not defined in environment variables');
+  console.error('❌ Authentication will fail without a consistent JWT_SECRET');
 }
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
@@ -27,7 +40,14 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
     }
     
     try {
-      const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
+      // Ensure JWT_SECRET is available
+      if (!JWT_SECRET) {
+        console.error('❌ Cannot verify token: JWT_SECRET is not defined');
+        return res.status(500).json({
+          message: 'Server configuration error',
+          code: 'SERVER_CONFIG_ERROR'
+        });
+      }
       
       // Verify token
       const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;

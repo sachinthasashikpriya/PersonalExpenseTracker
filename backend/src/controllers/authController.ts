@@ -79,31 +79,42 @@ export const login = async (req: Request, res: Response): Promise<Response> => {
       });
     }
     
-    // Verify password
-    const isPasswordMatch = await user.matchPassword(password);
+    console.log('✓ User found:', email);
     
-    if (!isPasswordMatch) {
-      console.log('✗ Invalid password for:', email);
-      return res.status(401).json({ 
-        message: 'Invalid email or password' 
+    // Verify password
+    try {
+      const isPasswordMatch = await user.matchPassword(password);
+      
+      if (!isPasswordMatch) {
+        console.log('✗ Invalid password for:', email);
+        return res.status(401).json({ 
+          message: 'Invalid email or password' 
+        });
+      }
+      
+      console.log('✓ Password verified for:', email);
+      
+      // Generate token - Convert ObjectId to string
+      const token = generateToken(user._id.toString());
+      
+      console.log('✓ Login successful for:', email);
+      console.log('✓ Token length:', token.length);
+      
+      // Return user data with token
+      return res.status(200).json({
+        _id: user._id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        username: user.username,
+        email: user.email,
+        token
+      });
+    } catch (passwordError) {
+      console.error('✗ Password comparison error:', passwordError);
+      return res.status(500).json({ 
+        message: 'Error verifying credentials' 
       });
     }
-    
-    // Generate token - Convert ObjectId to string
-    const token = generateToken(user._id.toString());
-    
-    console.log('✓ Login successful for:', email);
-    console.log('✓ Token length:', token.length);
-    
-    // Return user data with token
-    return res.status(200).json({
-      _id: user._id,
-      firstname: user.firstname,
-      lastname: user.lastname,
-      username: user.username,
-      email: user.email,
-      token
-    });
   } catch (error) {
     console.error('✗ Login error:', error);
     return res.status(500).json({ 

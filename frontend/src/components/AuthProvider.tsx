@@ -122,8 +122,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       console.log("Login attempt for:", email);
 
-      // Make API call - Note: Login endpoint should NOT require authentication
-      // So we temporarily need to make this call without the interceptor adding auth header
+      // Make API call to login endpoint
       const response = await API.post(`${AUTH_ENDPOINT}/signin`, {
         email,
         password,
@@ -131,63 +130,34 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       console.log("Login response received. Status:", response.status);
 
-      // Validate response data structure
-      if (!response.data) {
-        console.error("Empty response data");
-        throw new Error("Server returned empty response");
+      // Validate response data
+      if (!response.data || !response.data.token) {
+        console.error("Invalid response format:", response.data);
+        throw new Error("Invalid server response - missing token");
       }
 
-      if (!response.data.token) {
-        console.error("No token in response:", response.data);
-        throw new Error("Server did not provide authentication token");
-      }
-
+      // Extract user data and token
       const userData = response.data;
+      const { token } = userData;
 
-      // Save with error handling
-      try {
-        // Clear any existing data first
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+      // Store authentication data
+      localStorage.setItem("token", token);
+      localStorage.setItem("user", JSON.stringify(userData));
 
-        // Now save new data
-        localStorage.setItem("token", userData.token);
-        console.log("Token saved, length:", userData.token.length);
+      // Update application state
+      setUser(userData);
+      setIsAuthenticated(true);
 
-        const userJson = JSON.stringify(userData);
-        localStorage.setItem("user", userJson);
-        console.log("User data saved, size:", userJson.length);
-
-        // Verify data was saved
-        const verifiedToken = localStorage.getItem("token");
-        const verifiedUser = localStorage.getItem("user");
-        console.log("Storage verification:", {
-          hasToken: !!verifiedToken,
-          tokenMatches: verifiedToken === userData.token,
-          hasUser: !!verifiedUser,
-        });
-
-        if (!verifiedToken || verifiedToken !== userData.token) {
-          throw new Error("Token verification failed");
-        }
-
-        // Update state AFTER verified storage
-        setUser(userData);
-        setIsAuthenticated(true);
-
-        console.log("Login process completed successfully");
-      } catch (storageErr) {
-        console.error("Storage error details:", storageErr);
-        if (storageErr instanceof Error) {
-          throw new Error(`Failed to save auth data: ${storageErr.message}`);
-        } else {
-          throw new Error("Failed to save auth data due to an unknown error");
-        }
-      }
+      console.log("Login successful for:", email);
     } catch (err: any) {
       console.error("Login error:", err);
+
+      // Extract error message from API response if available
       const errorMessage =
-        err.response?.data?.message || err.message || "Login failed";
+        err.response?.data?.message ||
+        err.message ||
+        "Login failed. Please check your credentials.";
+
       setError(errorMessage);
       throw err;
     } finally {

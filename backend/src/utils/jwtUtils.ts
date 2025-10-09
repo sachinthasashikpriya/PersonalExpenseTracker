@@ -1,11 +1,23 @@
+import dotenv from 'dotenv';
 import jwt from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_secret_key';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '24h';
+// Ensure environment variables are loaded
+dotenv.config();
+
+// Generate a secure random string if JWT_SECRET is missing
+const generateSecureSecret = (): string => {
+  const crypto = require('crypto');
+  return crypto.randomBytes(64).toString('hex');
+};
+
+// Use environment variable or generate a secure random secret (not hardcoded)
+const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || generateSecureSecret();
+const JWT_EXPIRES_IN: string | number = process.env.JWT_EXPIRES_IN || '24h';
 
 // Verify JWT_SECRET is loaded
 if (!process.env.JWT_SECRET) {
-  console.warn('⚠️  WARNING: JWT_SECRET not found in environment variables, using default');
+  console.warn('⚠️  WARNING: JWT_SECRET not found in environment variables, using generated secure key');
+  console.warn('⚠️  This secure key will change on server restart. Set JWT_SECRET in your .env file!');
 } else {
   console.log('✓ JWT_SECRET loaded from environment');
 }

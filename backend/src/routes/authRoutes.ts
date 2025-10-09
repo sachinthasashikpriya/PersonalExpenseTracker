@@ -7,4 +7,9 @@ const router = express.Router();
 router.post('/signup', register);
 router.post('/signin', login);
 
+// Add a test endpoint to verify API connectivity
+router.get('/test', (req, res) => {
+  res.status(200).json({ message: 'Auth API is working' });
+});
+
 export default router;
