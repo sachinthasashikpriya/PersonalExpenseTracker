@@ -50,6 +50,9 @@ export const getIncomesByDate = async (req:Request, res:Response) => {
 
 export const createIncome = async (req: Request, res: Response) => {
   try {
+    console.log('Full request body:', req.body);
+    console.log('User:', req.user);
+    
     if (!req.user) {
       return res.status(401).json({ message: 'User not authenticated' });
     }
@@ -57,34 +60,35 @@ export const createIncome = async (req: Request, res: Response) => {
     const { category, description, amount, date } = req.body;
 
     // Validate required fields
-    if (!category || !description || !amount) {
+    if (!category || !description || amount === undefined) {
+      console.log('Validation failed:', { category, description, amount });
       return res.status(400).json({ message: 'Category, description, and amount are required' });
     }
 
-    // Convert amount to number if it's a string
-    const parsedAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
-    
-    // Validate amount is a valid positive number
-    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+    // Validate amount is a number
+    if (typeof amount !== 'number' || amount <= 0) {
+      console.log('Amount validation failed:', amount, typeof amount);
       return res.status(400).json({ message: 'Amount must be a positive number' });
     }
-    console.log('Received income data:', { category, description, amount, date });
-console.log('Amount type:', typeof amount);
 
+    // Create and save the income
     const income = new Income({
+      userId: req.user._id,
       category,
       description,
-      amount: parsedAmount, // Use parsed amount
-      date: date ? new Date(date) : Date.now(),
-      userId: req.user._id
+      amount,
+      date: date ? new Date(date) : Date.now()
     });
 
     const savedIncome = await income.save();
+    console.log('Income saved successfully:', savedIncome);
     res.status(201).json(savedIncome);
   } catch (error) {
+    console.error('Full error:', error);
     res.status(400).json({ message: error instanceof Error ? error.message : 'An unknown error occurred' });
   }
 };
+
 export const deleteIncome = async (req: Request, res: Response) => {
   try {
     // Ensure req.user exists

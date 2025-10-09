@@ -1,3 +1,4 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import AddIncomeModal from "../components/AddIncomeModal";
 import IncomeTable from "../components/Incometable";
@@ -79,11 +80,11 @@ const IncomeComponent = () => {
       try {
         const parsedAmount = parseFloat(newIncome.amount);
 
-        // Validate amount on frontend too
         if (isNaN(parsedAmount) || parsedAmount <= 0) {
           setError("Please enter a valid positive amount");
           return;
         }
+
         const incomeData: {
           category: string;
           description: string;
@@ -92,12 +93,11 @@ const IncomeComponent = () => {
         } = {
           category: newIncome.category,
           description: newIncome.description,
-          amount: parsedAmount, // Use the parsed amount
+          amount: parsedAmount, // Ensure amount is a number, not a string
         };
 
-        // Set date based on the active filter
+        // Date logic...
         if (activeFilter === "Yesterday") {
-          // Use yesterday's date when in Yesterday filter
           const yesterday = new Date();
           yesterday.setDate(yesterday.getDate() - 1);
           const year = yesterday.getFullYear();
@@ -105,13 +105,11 @@ const IncomeComponent = () => {
           const day = String(yesterday.getDate()).padStart(2, "0");
           incomeData.date = `${year}-${month}-${day}T12:00:00.000Z`;
         } else if (activeFilter === "Calendar" && selectedDate) {
-          // Use calendar selected date
           const year = selectedDate.getFullYear();
           const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
           const day = String(selectedDate.getDate()).padStart(2, "0");
           incomeData.date = `${year}-${month}-${day}T12:00:00.000Z`;
         } else {
-          // Default to today
           const today = new Date();
           const year = today.getFullYear();
           const month = String(today.getMonth() + 1).padStart(2, "0");
@@ -119,13 +117,31 @@ const IncomeComponent = () => {
           incomeData.date = `${year}-${month}-${day}T12:00:00.000Z`;
         }
 
+        // Log the data before sending to the API
+        console.log("Sending income data to backend:", incomeData);
+
+        // Create the income
         const savedIncome = await incomeService.createIncome(incomeData);
+
+        // Update local state with the new income
         setIncomes([savedIncome, ...incomes]);
         setNewIncome({ category: "", description: "", amount: "" });
         setShowAddIncomeModal(false);
         setError(null);
+
+        console.log("Income created successfully, reloading page");
+        // Reload the page to update all charts
+        window.location.reload();
       } catch (err) {
-        setError("Failed to add Income");
+        // Better error handling
+        if (axios.isAxiosError(err)) {
+          const errorMessage =
+            err.response?.data?.message || "Failed to add Income";
+          setError(errorMessage);
+          console.error("Error details:", err.response?.data);
+        } else {
+          setError("Failed to add Income");
+        }
         console.error("Error adding Income:", err);
       }
     }

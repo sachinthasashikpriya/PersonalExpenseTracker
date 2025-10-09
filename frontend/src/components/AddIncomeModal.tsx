@@ -30,7 +30,7 @@ const AddIncomeModal: React.FC<AddIncomeModalProps> = ({
       <div className="bg-white rounded-lg p-6 w-96 max-w-md">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold text-gray-800">
-            Add New Expense
+            Add New Income
           </h3>
           <button
             onClick={() => setShowAddIncomeModal(false)}
