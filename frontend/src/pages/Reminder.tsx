@@ -1,7 +1,8 @@
+import Mainnavbar from "../components/Mainnavbar";
 const Reminder = () => {
     return (
       <div>
-        <h1>Reminder</h1>
+       <Mainnavbar activeTab="Reminders" setActiveTab={() => {}} />
       </div>
     );
   };
