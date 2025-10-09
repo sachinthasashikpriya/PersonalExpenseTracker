@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import AuthContext from "../context/AuthContext";
 import API from "../services/api"; // Import your API instance instead of axios
-import type { RegisterData, User } from "../types/authtypes";
+import { authService } from "../services/authService"; // Import only authService
+import type { RegisterData, UpdateProfileData, User } from "../types/authtypes"; // Import UpdateProfileData from authtypes
 
 // Base URL for API calls - this is now handled by API instance
 const AUTH_ENDPOINT = "/auth";
@@ -174,6 +175,33 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     console.log("User logged out");
   };
 
+  // Update profile function
+  const updateProfile = async (
+    profileData: UpdateProfileData
+  ): Promise<void> => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const updatedUser = await authService.updateProfile(profileData);
+
+      // Update user in state
+      setUser((prevUser) => {
+        if (prevUser) {
+          return { ...prevUser, ...updatedUser };
+        }
+        return prevUser;
+      });
+
+      console.log("Profile updated successfully");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Failed to update profile");
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const value = {
     user,
     isAuthenticated,
@@ -181,6 +209,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     login,
     register,
     logout,
+    updateProfile,
     error,
   };
 

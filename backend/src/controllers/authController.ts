@@ -146,3 +146,113 @@ export const getProfile = async (req: Request, res: Response): Promise<Response>
     });
   }
 };
+
+// Update user profile
+export const updateProfile = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        message: 'Not authorized' 
+      });
+    }
+
+    const userId = req.user._id;
+    const { firstname, lastname, username, email } = req.body;
+
+    // Check if username already exists (if changing username)
+    if (username && username !== req.user.username) {
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        return res.status(400).json({
+          message: 'Username already taken'
+        });
+      }
+    }
+
+    // Check if email already exists (if changing email)
+    if (email && email !== req.user.email) {
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
+        return res.status(400).json({
+          message: 'Email already registered'
+        });
+      }
+    }
+
+    // Update user data
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { firstname, lastname, username, email },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    return res.status(200).json({
+      _id: updatedUser._id,
+      firstname: updatedUser.firstname,
+      lastname: updatedUser.lastname,
+      username: updatedUser.username,
+      email: updatedUser.email,
+    });
+  } catch (error) {
+    console.error('✗ Update profile error:', error);
+    return res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Server error updating profile' 
+    });
+  }
+};
+
+// Update user password
+export const updatePassword = async (req: Request, res: Response): Promise<Response> => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ 
+        message: 'Not authorized' 
+      });
+    }
+
+    const userId = req.user._id;
+    const { currentPassword, newPassword } = req.body;
+
+    // Validate input
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        message: 'Current password and new password are required'
+      });
+    }
+
+    // Get user with password
+    const user = await User.findById(userId).select('+password');
+    if (!user) {
+      return res.status(404).json({
+        message: 'User not found'
+      });
+    }
+
+    // Verify current password
+    const isMatch = await user.matchPassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({
+        message: 'Current password is incorrect'
+      });
+    }
+
+    // Update password
+    user.password = newPassword;
+    await user.save();
+
+    return res.status(200).json({
+      message: 'Password updated successfully'
+    });
+  } catch (error) {
+    console.error('✗ Update password error:', error);
+    return res.status(500).json({ 
+      message: error instanceof Error ? error.message : 'Server error updating password' 
+    });
+  }
+};

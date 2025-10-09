@@ -14,6 +14,7 @@ export interface User {
     login: (email: string, password: string) => Promise<void>;
     register: (userData: RegisterData) => Promise<void>;
     logout: () => void;
+    updateProfile: (profileData: UpdateProfileData) => Promise<void>;
     error: string | null;
   }
   
@@ -23,4 +24,11 @@ export interface User {
     username: string;
     email: string;
     password: string;
+  }
+
+  export interface UpdateProfileData {
+    firstname: string;
+    lastname: string;
+    username: string;
+    email: string;
   }
