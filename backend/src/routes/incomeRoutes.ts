@@ -4,7 +4,8 @@ import {
     deleteIncome,
     getAllIncomes,
     getIncomesByDate,
-    getIncomesByDateRange
+    getIncomesByDateRange,
+    getCurrentMonthIncomeSummary
 } from '../controllers/incomeController';
 import { protect } from '../middleware/authMiddleware';
 
@@ -15,5 +16,6 @@ router.post('/', createIncome);
 router.delete('/:id', deleteIncome);
 router.get('/date/:date', getIncomesByDate);
 router.get('/range/:startDate/:endDate', getIncomesByDateRange);
+router.get('/monthly/current', getCurrentMonthIncomeSummary);
 
 export default router;

@@ -4,7 +4,9 @@ import {
     deleteExpense,
     getAllExpenses,
     getExpensesByDate,
-    getExpensesByDateRange
+    getExpensesByDateRange,
+    getMonthlyExpenseSummary,
+    getCurrentMonthExpenseSummary
 } from '../controllers/expenseController';
 import { protect } from '../middleware/authMiddleware';
   
@@ -17,5 +19,7 @@ router.post('/', createExpense);
 router.delete('/:id', deleteExpense);
 router.get('/date/:date', getExpensesByDate);
 router.get('/range/:startDate/:endDate', getExpensesByDateRange);
+router.get('/monthly/:year/:month', getMonthlyExpenseSummary);
+router.get('/monthly/current', getCurrentMonthExpenseSummary);
 
 export default router;

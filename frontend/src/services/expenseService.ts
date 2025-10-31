@@ -10,6 +10,24 @@ export interface Expense {
   userId: string;
 }
 
+export interface ExpenseSummary {
+  year: number;
+  month: number;
+  monthName: string;
+  totalExpenses: number;
+  expenseCount: number;
+  expensesByCategory: Record<string, number>;
+  dailyAverage: number;
+  projectedMonthlyExpense: number;
+  highestExpense: number;
+  averageExpenseAmount: number;
+  recentExpenses: Expense[];
+  dateRange: {
+    startDate: string;
+    endDate: string;
+  };
+}
+
 export const expenseService = {
   // Get all expenses
   getAllExpenses: async (): Promise<Expense[]> => {
@@ -79,4 +97,14 @@ getExpensesByDateRange: async (startDate: string, endDate: string): Promise<Expe
     throw error;
   }
 },
+getCurrentMonthSummary: async (): Promise<ExpenseSummary> => {
+  try {
+    const response = await API.get('/expense/monthly/current');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current month expense summary:', error);
+    throw error;
+  }
+},
+
 };

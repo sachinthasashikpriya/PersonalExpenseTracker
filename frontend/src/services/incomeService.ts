@@ -8,6 +8,23 @@ export interface Income {
   date?: string;
   createdAt?: string;
 }
+export interface IncomeSummary {
+  year: number;
+  month: number;
+  monthName: string;
+  totalIncome: number;
+  incomeCount: number;
+  incomesByCategory: Record<string, number>;
+  dailyAverage: number;
+  projectedMonthlyIncome: number;
+  highestIncome: number;
+  averageIncomeAmount: number;
+  recentIncomes: Income[];
+  dateRange: {
+    startDate: string;
+    endDate: string;
+  };
+}
 
 export const incomeService = {
   // Get all incomes
@@ -69,6 +86,15 @@ getIncomesByDateRange: async (startDate: string, endDate: string): Promise<Incom
     return response.data;
   } catch (error) {
     console.error('Error fetching incomes by date range:', error);
+    throw error;
+  }
+},
+getCurrentMonthSummary: async (): Promise<IncomeSummary> => {
+  try {
+    const response = await API.get('/income/monthly/current');
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching current month income summary:', error);
     throw error;
   }
 },

@@ -3,7 +3,12 @@ import ExpenseTable from "../components/Expensetable";
 import Mainnavbar from "../components/Mainnavbar";
 import CategoriesPieChart from "../components/PieChart";
 import StaticChart from "../components/StaticChart";
-import { expenseService, type Expense } from "../services/expenseService";
+import {
+  expenseService,
+  type Expense,
+  type ExpenseSummary,
+} from "../services/expenseService";
+import { incomeService, type IncomeSummary } from "../services/incomeService";
 
 // import { User, Bell, Calendar, CreditCard, TrendingUp, TrendingDown } from 'lucide-react';
 
@@ -17,7 +22,14 @@ const Dashboard: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  // UI state variables
+  // Financial summary states
+  const [expenseSummary, setExpenseSummary] = useState<ExpenseSummary | null>(
+    null
+  );
+  const [incomeSummary, setIncomeSummary] = useState<IncomeSummary | null>(
+    null
+  );
+  const [summaryLoading, setSummaryLoading] = useState(true);
 
   // With this code that automatically calculates last 7 days
   const today = new Date();
@@ -35,10 +47,80 @@ const Dashboard: React.FC = () => {
   const [endDate, setEndDate] = useState(formatDateForAPI(today));
   const [startDate, setStartDate] = useState(formatDateForAPI(oneWeekAgo));
 
+  // Calculate balance
+  const balance =
+    (incomeSummary?.totalIncome || 0) - (expenseSummary?.totalExpenses || 0);
+
+  // Fetch monthly summaries
+  const fetchMonthlySummaries = async () => {
+    try {
+      setSummaryLoading(true);
+      setError(null);
+
+      console.log("Fetching monthly summaries..."); // Debug log
+
+      const [expenseData, incomeData] = await Promise.all([
+        expenseService.getCurrentMonthSummary(),
+        incomeService.getCurrentMonthSummary(),
+      ]);
+
+      console.log("Expense summary data:", expenseData); // Debug log
+      console.log("Income summary data:", incomeData); // Debug log
+
+      setExpenseSummary(expenseData);
+      setIncomeSummary(incomeData);
+    } catch (error) {
+      console.error("Error fetching monthly summaries:", error);
+      setError("Failed to load financial summary");
+      // Set default values to prevent crashes
+      setExpenseSummary({
+        year: new Date().getFullYear(),
+        month: new Date().getMonth() + 1,
+        monthName: new Date().toLocaleString("default", { month: "long" }),
+        totalExpenses: 0,
+        expenseCount: 0,
+        expensesByCategory: {},
+        dailyAverage: 0,
+        projectedMonthlyExpense: 0,
+        highestExpense: 0,
+        averageExpenseAmount: 0,
+        recentExpenses: [],
+        dateRange: {
+          startDate: "",
+          endDate: "",
+        },
+      });
+      setIncomeSummary({
+        year: new Date().getFullYear(),
+        month: new Date().getMonth() + 1,
+        monthName: new Date().toLocaleString("default", { month: "long" }),
+        totalIncome: 0,
+        incomeCount: 0,
+        incomesByCategory: {},
+        dailyAverage: 0,
+        projectedMonthlyIncome: 0,
+        highestIncome: 0,
+        averageIncomeAmount: 0,
+        recentIncomes: [],
+        dateRange: {
+          startDate: "",
+          endDate: "",
+        },
+      });
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   // Fetch expenses on component mount
   useEffect(() => {
     fetchExpenses();
   }, [activeFilter, selectedDate, startDate, endDate]);
+
+  // Fetch monthly summaries on component mount
+  useEffect(() => {
+    fetchMonthlySummaries();
+  }, []);
 
   // Add this to Dashboard.tsx
   useEffect(() => {
@@ -108,6 +190,17 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Format currency
+  const formatCurrency = (amount: number): string => {
+    return new Intl.NumberFormat("en-LK", {
+      // Use "en-LK" for Sri Lanka locale
+      style: "currency",
+      currency: "LKR", // Change INR -> LKR
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   // Sample data - replace with actual data from your API
 
   return (
@@ -122,50 +215,102 @@ const Dashboard: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             My Dashboard
           </h1>
+          <p className="text-gray-600">
+            {expenseSummary
+              ? `Financial overview for ${expenseSummary.monthName} ${expenseSummary.year}`
+              : "Loading financial data..."}
+          </p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          {/* Balance Card */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Balance</p>
-                <p className="text-2xl font-bold text-gray-900">Rs.10,000</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {summaryLoading ? "Loading..." : formatCurrency(balance)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Current month balance
+                </p>
               </div>
               <div className="text-right">
-                <span className="text-teal-500 font-semibold">72%</span>
-                <div className="w-12 h-2 bg-gray-200 rounded-full mt-2">
-                  <div className="w-9 h-2 bg-teal-500 rounded-full"></div>
+                <div
+                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                    balance >= 0
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {balance >= 0 ? "↗ Positive" : "↘ Negative"}
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Expense Card */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Expense</p>
-                <p className="text-2xl font-bold text-gray-900">10,000</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {summaryLoading
+                    ? "Loading..."
+                    : formatCurrency(expenseSummary?.totalExpenses || 0)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {expenseSummary
+                    ? `${expenseSummary.expenseCount} transactions`
+                    : "This month"}
+                </p>
               </div>
               <div className="text-right">
-                <span className="text-teal-500 font-semibold">72%</span>
-                <div className="w-12 h-2 bg-gray-200 rounded-full mt-2">
-                  <div className="w-9 h-2 bg-teal-500 rounded-full"></div>
+                <div className="text-xs text-gray-500">
+                  Avg:{" "}
+                  {summaryLoading
+                    ? "..."
+                    : formatCurrency(expenseSummary?.averageExpenseAmount || 0)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Daily:{" "}
+                  {summaryLoading
+                    ? "..."
+                    : formatCurrency(expenseSummary?.dailyAverage || 0)}
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Income Card */}
           <div className="bg-white rounded-xl p-6 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600 mb-1">Income</p>
-                <p className="text-2xl font-bold text-gray-900">10,000</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {summaryLoading
+                    ? "Loading..."
+                    : formatCurrency(incomeSummary?.totalIncome || 0)}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {incomeSummary
+                    ? `${incomeSummary.incomeCount} sources`
+                    : "This month"}
+                </p>
               </div>
               <div className="text-right">
-                <span className="text-teal-500 font-semibold">72%</span>
-                <div className="w-12 h-2 bg-gray-200 rounded-full mt-2">
-                  <div className="w-9 h-2 bg-teal-500 rounded-full"></div>
+                <div className="text-xs text-gray-500">
+                  Avg:{" "}
+                  {summaryLoading
+                    ? "..."
+                    : formatCurrency(incomeSummary?.averageIncomeAmount || 0)}
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  Daily:{" "}
+                  {summaryLoading
+                    ? "..."
+                    : formatCurrency(incomeSummary?.dailyAverage || 0)}
                 </div>
               </div>
             </div>
@@ -191,7 +336,7 @@ const Dashboard: React.FC = () => {
               setActiveFilter={setActiveFilter}
             />
           </div>
-          
+
           {/* Expense Table */}
           <ExpenseTable
             expenses={expenses}
